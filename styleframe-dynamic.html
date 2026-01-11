@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Styleframe 3D Stack</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      overflow: hidden;
+      background: #f2f2f2;
+    }
+
+    .container {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+      cursor: none;
+      user-select: none;
+    }
+
+    .cursor {
+      position: fixed;
+      width: 18px;
+      height: 18px;
+      pointer-events: none;
+      z-index: 10000;
+      transform: translate(-50%, -50%);
+    }
+
+    .cursor-v,
+    .cursor-h {
+      position: absolute;
+      background: #888;
+      transition: background 0.12s;
+    }
+
+    .cursor-v {
+      width: 1.5px;
+      height: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .cursor-h {
+      width: 18px;
+      height: 1.5px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .cursor.white .cursor-v,
+    .cursor.white .cursor-h {
+      background: #fff;
+    }
+
+
+    .scene {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      perspective: 1400px;
+      perspective-origin: 50% 50%;
+    }
+
+    .stack {
+      position: absolute;
+      top: 55%;
+      left: 35%;
+      transform-style: preserve-3d;
+      transition: transform 0.12s ease-out;
+    }
+
+    .card-wrap {
+      position: absolute;
+      transform-style: preserve-3d;
+      transition: transform 0.45s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    .card {
+      width: 340px;
+      height: 230px;
+      border-radius: 0 0 3px 3px;
+      overflow: visible;
+      background: #333;
+      box-shadow:
+        0 2px 4px rgba(0, 0, 0, 0.1),
+        0 8px 24px rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      cursor: none;
+      position: relative;
+    }
+
+    /* File tab sticking up */
+    .card::before {
+      content: '';
+      position: absolute;
+      top: -24px;
+      left: 20px;
+      width: 80px;
+      height: 24px;
+      background: inherit;
+      border-radius: 6px 6px 0 0;
+      box-shadow:
+        0 -2px 4px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+
+    /* Tab label */
+    .card::after {
+      content: attr(data-tab);
+      position: absolute;
+      top: -20px;
+      left: 28px;
+      font-size: 9px;
+      font-weight: 400;
+      letter-spacing: 0.5px;
+      color: rgba(0, 0, 0, 0.5);
+      text-transform: uppercase;
+    }
+
+    /* Paper texture lines */
+    .card-bg {
+      position: absolute;
+      inset: 0;
+      border-radius: 0 0 3px 3px;
+    }
+
+    .card-bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(to bottom,
+          transparent 0px,
+          transparent 28px,
+          rgba(0, 0, 0, 0.03) 28px,
+          rgba(0, 0, 0, 0.03) 29px);
+      pointer-events: none;
+    }
+
+    /* Folder edge detail */
+    .card-inner {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      right: 8px;
+      bottom: 8px;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      border-radius: 2px;
+      pointer-events: none;
+    }
+
+    .label {
+      position: absolute;
+      left: 360px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 42px;
+      font-weight: 300;
+      color: #1a1a1a;
+      white-space: nowrap;
+      letter-spacing: -0.02em;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+
+    .card-wrap.hovered .label {
+      opacity: 1;
+    }
+
+    .card-wrap.hovered .card {
+      box-shadow:
+        0 4px 8px rgba(0, 0, 0, 0.15),
+        0 16px 40px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+
+    .url {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      font-size: 12px;
+      color: #888;
+      opacity: 0;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+
+    .url.show {
+      opacity: 1;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="cursor" id="cursor">
+      <div class="cursor-v"></div>
+      <div class="cursor-h"></div>
+    </div>
+
+    <div class="scene" id="scene">
+      <div class="stack" id="stack"></div>
+    </div>
+
+    <div class="url" id="url"></div>
+  </div>
+
+  <script>
+    const projects = [
+      { name: 'Oakley', url: 'styleframe.de/project/mars', bg: 'linear-gradient(135deg, #1a0800 0%, #6b3520 50%, #2d1000 100%)' },
+      { name: 'Teenage Engineering', url: 'styleframe.de/project/teenage-engineering', bg: 'linear-gradient(135deg, #ff8040 0%, #e06020 50%, #cc4400 100%)' },
+      { name: 'Ray-Ban', url: 'styleframe.de/project/innovation-lab', bg: 'linear-gradient(135deg, #404040 0%, #1a1a1a 50%, #000000 100%)' },
+      { name: 'Samsung', url: 'styleframe.de/project/beats-n-buckets', bg: 'linear-gradient(135deg, #ffffff 0%, #f0f0f0 50%, #e0e0e0 100%)' },
+      { name: 'Moncler', url: 'styleframe.de/project/moncler-grenoble', bg: 'linear-gradient(135deg, #6050a0 0%, #403070 50%, #201840 100%)' },
+      { name: 'Oakley', url: 'styleframe.de/project/13-11', bg: 'linear-gradient(135deg, #9070c0 0%, #6050a0 50%, #403070 100%)' },
+      { name: 'We Are Rewind', url: 'styleframe.de/project/we-are-rewind', bg: 'linear-gradient(135deg, #e8ff20 0%, #d0e800 50%, #b0c800 100%)' },
+      { name: 'Hatton Labs', url: 'styleframe.de/project/hatton-labs-x-ap', bg: 'linear-gradient(135deg, #303030 0%, #181818 50%, #080808 100%)' },
+    ];
+
+    const cursor = document.getElementById('cursor');
+    const scene = document.getElementById('scene');
+    const stack = document.getElementById('stack');
+    const urlEl = document.getElementById('url');
+
+    let mouse = { x: 0.5, y: 0.5 };
+    let target = { x: 0.5, y: 0.5 };
+
+    // Create cards (positions will be set by rebuildCards after settings load)
+    projects.forEach((p, i) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'card-wrap';
+
+      wrap.style.zIndex = i;
+
+      // File folder colors - muted manila/pastel tones
+      const folderColors = [
+        '#e8d4b8', // manila
+        '#d4c4a8', // tan
+        '#c8d8c4', // sage green
+        '#d8d4c8', // warm gray
+        '#e4d8cc', // cream
+        '#d0c8b8', // khaki
+        '#c4d4d8', // light blue-gray
+        '#dcd4c4', // oatmeal
+      ];
+      const folderColor = folderColors[i % folderColors.length];
+
+      wrap.innerHTML = `
+        <div class="card" data-tab="${p.name.substring(0, 8)}" style="background: ${folderColor}">
+          <div class="card-bg" style="background: ${folderColor}"></div>
+          <div class="card-inner"></div>
+        </div>
+        <div class="label">${p.name}</div>
+      `;
+
+      wrap.addEventListener('mouseenter', () => {
+        wrap.classList.add('hovered');
+        wrap.style.transform = wrap.dataset.hover;
+        urlEl.textContent = p.url;
+        urlEl.classList.add('show');
+        cursor.classList.add('white');
+      });
+
+      wrap.addEventListener('mouseleave', () => {
+        wrap.classList.remove('hovered');
+        wrap.style.transform = wrap.dataset.base;
+        urlEl.classList.remove('show');
+        cursor.classList.remove('white');
+      });
+
+      stack.appendChild(wrap);
+    });
+
+    // Control settings
+    const defaults = {
+      strength: 100,
+      rotateXBase: 25,
+      rotateXRange: 40,
+      rotateYBase: -25,
+      rotateYRange: 35,
+      rotateZBase: 0,
+      rotateZRange: 15,
+      stackOffsetX: 0,
+      stackOffsetY: -8,
+      stackOffsetZ: -20,
+      positionX: 50,
+      positionY: 50,
+      zoom: 100,
+      smoothing: 6
+    };
+
+    // Load saved settings from localStorage or use defaults
+    const STORAGE_KEY = 'styleframe3d_settings';
+    let settings = { ...defaults };
+
+    function loadSettings() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          Object.assign(settings, parsed);
+        }
+      } catch (e) {
+        console.log('Could not load settings:', e);
+      }
+    }
+
+    function saveSettings() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+      } catch (e) {
+        console.log('Could not save settings:', e);
+      }
+    }
+
+    loadSettings();
+
+    // Initialize and apply loaded settings
+    function initSettings() {
+      applyZoom();
+      applyPosition();
+      rebuildCards();
+    }
+
+    function applyZoom() {
+      const scale = settings.zoom / 100;
+      stack.style.scale = scale;
+    }
+
+    function applyPosition() {
+      stack.style.left = settings.positionX + '%';
+      stack.style.top = settings.positionY + '%';
+    }
+
+    function rebuildCards() {
+      const cards = stack.querySelectorAll('.card-wrap');
+      cards.forEach((wrap, i) => {
+        const x = i * settings.stackOffsetX;
+        const y = i * settings.stackOffsetY;
+        const z = i * settings.stackOffsetZ;
+        wrap.dataset.base = `translate3d(${x}px, ${y}px, ${z}px)`;
+        wrap.dataset.hover = `translate3d(${x}px, ${y - 120}px, ${z}px)`;
+        if (!wrap.classList.contains('hovered')) {
+          wrap.style.transform = wrap.dataset.base;
+        }
+      });
+    }
+
+    initSettings();
+
+    function animate() {
+      const smoothFactor = settings.smoothing / 100;
+      const strengthMult = settings.strength / 100;
+
+      mouse.x += (target.x - mouse.x) * smoothFactor;
+      mouse.y += (target.y - mouse.y) * smoothFactor;
+
+      // Dynamic POV based on mouse position with adjustable settings
+      const rotateX = settings.rotateXBase - (mouse.y * settings.rotateXRange * strengthMult);
+      const rotateY = settings.rotateYBase + (mouse.x * settings.rotateYRange * strengthMult);
+      // Z rotation based on horizontal mouse position (roll effect)
+      const rotateZ = settings.rotateZBase + ((mouse.x - 0.5) * settings.rotateZRange * 2 * strengthMult);
+
+      // Also shift perspective origin based on mouse
+      const perspX = 30 + (mouse.x * 40 * strengthMult);
+      const perspY = 30 + (mouse.y * 40 * strengthMult);
+
+      scene.style.perspectiveOrigin = `${perspX}% ${perspY}%`;
+      stack.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg)`;
+
+      requestAnimationFrame(animate);
+    }
+
+    document.addEventListener('mousemove', e => {
+      target.x = e.clientX / window.innerWidth;
+      target.y = e.clientY / window.innerHeight;
+      cursor.style.left = e.clientX + 'px';
+      cursor.style.top = e.clientY + 'px';
+    });
+
+    animate();
+  </script>
+</body>
+
+</html>

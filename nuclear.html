@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NUCLEAR</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      background: #0a0a0a;
+      font-family: 'Montserrat', sans-serif;
+      color: #fff;
+      overflow-x: hidden;
+    }
+
+    /* Header */
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 30px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+      background: linear-gradient(to bottom, rgba(10, 10, 10, 0.9) 0%, transparent 100%);
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 8px;
+      color: #e91e1e;
+      text-transform: uppercase;
+    }
+
+    .back-link {
+      font-size: 12px;
+      letter-spacing: 3px;
+      color: rgba(255, 255, 255, 0.5);
+      text-decoration: none;
+      text-transform: uppercase;
+      transition: color 0.3s;
+    }
+
+    .back-link:hover {
+      color: #e91e1e;
+    }
+
+    /* Grid Container */
+    .grid-container {
+      padding: 120px 40px 60px;
+      max-width: 1800px;
+      margin: 0 auto;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    /* Grid Item */
+    .grid-item {
+      position: relative;
+      aspect-ratio: 16/9;
+      overflow: hidden;
+      border-radius: 8px;
+      background: #151515;
+      cursor: pointer;
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s;
+    }
+
+    .grid-item:hover {
+      transform: scale(1.03);
+      box-shadow: 0 20px 60px rgba(233, 30, 30, 0.2);
+      z-index: 10;
+    }
+
+    .grid-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.4s;
+    }
+
+    .grid-item:hover img {
+      transform: scale(1.1);
+    }
+
+    .grid-item::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, transparent 50%);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .grid-item:hover::after {
+      opacity: 1;
+    }
+
+    .grid-item .title {
+      position: absolute;
+      bottom: 15px;
+      left: 15px;
+      right: 15px;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 2px;
+      color: rgba(255, 255, 255, 0.9);
+      text-transform: uppercase;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.3s, transform 0.3s;
+      z-index: 2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .grid-item:hover .title {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Lightbox */
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.95);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    .lightbox.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .lightbox img {
+      max-width: 90vw;
+      max-height: 90vh;
+      object-fit: contain;
+      border-radius: 8px;
+      transform: scale(0.9);
+      transition: transform 0.3s;
+    }
+
+    .lightbox.active img {
+      transform: scale(1);
+    }
+
+    .lightbox-close {
+      position: absolute;
+      top: 30px;
+      right: 30px;
+      width: 50px;
+      height: 50px;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.3s, transform 0.3s;
+    }
+
+    .lightbox-close:hover {
+      background: rgba(233, 30, 30, 0.3);
+      transform: rotate(90deg);
+    }
+
+    .lightbox-close svg {
+      width: 24px;
+      height: 24px;
+      stroke: #fff;
+    }
+
+    /* Loading state */
+    .grid-item.loading {
+      background: linear-gradient(90deg, #151515 25%, #1a1a1a 50%, #151515 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+
+    @keyframes shimmer {
+      0% {
+        background-position: 200% 0;
+      }
+
+      100% {
+        background-position: -200% 0;
+      }
+    }
+
+    /* Counter */
+    .counter {
+      position: fixed;
+      bottom: 30px;
+      right: 40px;
+      font-size: 12px;
+      letter-spacing: 3px;
+      color: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Glow effect */
+    .glow {
+      position: fixed;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(233, 30, 30, 0.08) 0%, transparent 70%);
+      pointer-events: none;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 0;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header {
+        padding: 20px;
+      }
+
+      .logo {
+        font-size: 18px;
+        letter-spacing: 4px;
+      }
+
+      .grid-container {
+        padding: 100px 20px 40px;
+      }
+
+      .grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 15px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="glow"></div>
+
+  <header class="header">
+    <div class="logo">Nuclear</div>
+    <a href="prologue-ep_11.html" class="back-link">← Back</a>
+  </header>
+
+  <div class="grid-container">
+    <div class="grid" id="grid">
+      <!-- Images will be loaded dynamically -->
+    </div>
+  </div>
+
+  <div class="counter" id="counter"></div>
+
+  <!-- Lightbox -->
+  <div class="lightbox" id="lightbox">
+    <button class="lightbox-close" id="lightboxClose">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round">
+        <path d="M18 6L6 18M6 6l12 12" />
+      </svg>
+    </button>
+    <img src="" alt="" id="lightboxImg">
+  </div>
+
+  <script>
+    // List of images in the nuclear folder
+    const images = [
+      'nuclear flame.gif',
+      'nuclear pit.gif',
+      'Untitled video - Made with Clipchamp (14).gif',
+      'Untitled video - Made with Clipchamp (16).gif',
+      'Untitled video - Made with Clipchamp (165).gif',
+      'Untitled video - Made with Clipchamp (17).gif',
+      'Untitled video - Made with Clipchamp (19).gif',
+      'Untitled video - Made with Clipchamp (20).gif',
+      'Untitled video - Made with Clipchamp (21).gif',
+      'Untitled video - Made with Clipchamp (22).gif',
+      'Untitled video - Made with Clipchamp (23).gif',
+      'Untitled video - Made with Clipchamp (25).gif',
+      'Untitled video - Made with Clipchamp (26).gif',
+      'Untitled video - Made with Clipchamp (30).gif',
+      'Untitled video - Made with Clipchamp (518).gif',
+      'Untitled video - Made with Clipchamp (6).gif'
+    ];
+
+    const grid = document.getElementById('grid');
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightboxImg');
+    const lightboxClose = document.getElementById('lightboxClose');
+    const counter = document.getElementById('counter');
+
+    // Update counter
+    counter.textContent = `${images.length} ITEMS`;
+
+    // Create grid items
+    images.forEach((filename, index) => {
+      const item = document.createElement('div');
+      item.className = 'grid-item loading';
+
+      // Clean up filename for display
+      let displayName = filename
+        .replace('.gif', '')
+        .replace('.png', '')
+        .replace('.jpg', '')
+        .replace('.jpeg', '')
+        .replace('Untitled video - Made with Clipchamp ', 'Clip ');
+
+      item.innerHTML = `
+                <img src="nuclear/${encodeURIComponent(filename)}" alt="${displayName}" loading="lazy">
+                <span class="title">${displayName}</span>
+            `;
+
+      const img = item.querySelector('img');
+      img.onload = () => item.classList.remove('loading');
+      img.onerror = () => {
+        item.style.display = 'none';
+      };
+
+      // Lightbox click
+      item.addEventListener('click', () => {
+        lightboxImg.src = `nuclear/${encodeURIComponent(filename)}`;
+        lightbox.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      });
+
+      grid.appendChild(item);
+    });
+
+    // Close lightbox
+    lightboxClose.addEventListener('click', closeLightbox);
+    lightbox.addEventListener('click', (e) => {
+      if (e.target === lightbox) closeLightbox();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeLightbox();
+    });
+
+    function closeLightbox() {
+      lightbox.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+  </script>
+</body>
+
+</html>
+
+
+
+

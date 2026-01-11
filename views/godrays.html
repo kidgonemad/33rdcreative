@@ -1,0 +1,2336 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D GLB Viewer with God Rays</title>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+            "postprocessing": "https://unpkg.com/postprocessing@6.35.2/build/index.js"
+        }
+    }
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            overflow: hidden;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        #container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        #upload-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+            z-index: 300;
+        }
+
+        #upload-screen h1 {
+            color: white;
+            font-size: 32px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+
+        #upload-screen p {
+            color: #888;
+            margin-bottom: 30px;
+        }
+
+        #drop-zone {
+            width: 400px;
+            height: 200px;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #drop-zone:hover,
+        #drop-zone.dragover {
+            border-color: white;
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+        }
+
+        #drop-zone svg {
+            width: 60px;
+            height: 60px;
+            fill: rgba(255, 255, 255, 0.5);
+            margin-bottom: 15px;
+        }
+
+        #drop-zone span {
+            color: white;
+            font-size: 16px;
+        }
+
+        #drop-zone small {
+            color: #666;
+            margin-top: 10px;
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        /* Minimalist Toggle Buttons - Bottom Center */
+        .toggle-controls {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 24px;
+            z-index: 150;
+            opacity: 0.5;
+            transition: opacity 0.3s ease;
+        }
+
+        .toggle-controls:hover {
+            opacity: 0.9;
+        }
+
+        .toggle-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-btn svg {
+            width: 22px;
+            height: 22px;
+            fill: rgba(255, 255, 255, 0.5);
+            transition: fill 0.3s, transform 0.3s;
+        }
+
+        .toggle-btn:hover svg {
+            fill: rgba(255, 255, 255, 0.8);
+            transform: scale(1.15);
+        }
+
+        .toggle-btn.active svg {
+            fill: #fff;
+        }
+
+        .toggle-btn.off svg {
+            fill: rgba(255, 255, 255, 0.25);
+        }
+
+        /* Menu icon - top right */
+        .menu-icon {
+            position: fixed;
+            top: 20px;
+            right: 25px;
+            font-size: 20px;
+            font-weight: 700;
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            z-index: 500;
+            transition: color 0.3s;
+        }
+
+        .menu-icon:hover {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Hidden elements - keep for compatibility but hide */
+        #menu-toggle,
+        #controls,
+        #parts-panel,
+        #godrays-panel,
+        #camera-panel,
+        #env-panel,
+        #resize-panel {
+            display: none !important;
+        }
+
+        .btn .icon {
+            font-size: 12px;
+            width: 16px;
+            text-align: center;
+        }
+
+        .btn .label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 18px;
+            z-index: 200;
+            text-align: center;
+            display: none;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        #new-file-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: rgba(255, 255, 255, 0.7);
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        #new-file-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+
+        #parts-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 15px;
+            max-height: 70vh;
+            overflow-y: auto;
+            z-index: 100;
+            min-width: 220px;
+            max-width: 300px;
+            display: none;
+            backdrop-filter: blur(10px);
+        }
+
+        #parts-panel h3 {
+            color: white;
+            font-size: 14px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .part-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .part-item:last-child {
+            border-bottom: none;
+        }
+
+        .part-item label {
+            color: #ddd;
+            font-size: 12px;
+            cursor: pointer;
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .part-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: #00aaff;
+        }
+
+        .strobe-btn {
+            background: rgba(255, 200, 0, 0.1);
+            border: 1px solid rgba(255, 200, 0, 0.3);
+            color: #ffcc00;
+            padding: 3px 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 10px;
+            transition: all 0.2s;
+        }
+
+        .strobe-btn:hover {
+            background: rgba(255, 200, 0, 0.2);
+        }
+
+        .strobe-btn.active {
+            background: rgba(255, 200, 0, 0.4);
+            border-color: #ffcc00;
+            box-shadow: 0 0 8px rgba(255, 200, 0, 0.5);
+        }
+
+        #strobe-target-info {
+            color: #888;
+            font-size: 11px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        #strobe-target-info span {
+            color: #ffcc00;
+        }
+
+        .part-actions {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .part-actions button {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .part-actions button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        #parts-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #parts-panel::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        #parts-panel::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        #godrays-panel {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 15px 20px;
+            z-index: 100;
+            min-width: 320px;
+            display: none;
+            backdrop-filter: blur(10px);
+        }
+
+        #godrays-panel h3 {
+            color: white;
+            font-size: 14px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .slider-group {
+            margin-bottom: 12px;
+        }
+
+        .slider-group label {
+            color: #ddd;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .slider-group input[type="range"] {
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .slider-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .slider-row .slider-group {
+            flex: 1;
+        }
+
+        .save-btn {
+            background: rgba(0, 200, 100, 0.2) !important;
+            border: 1px solid rgba(0, 200, 100, 0.5) !important;
+            color: #00ff88 !important;
+        }
+
+        .save-btn:hover {
+            background: rgba(0, 200, 100, 0.3) !important;
+        }
+
+        #camera-panel {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 15px 20px;
+            z-index: 100;
+            min-width: 340px;
+            display: none;
+            backdrop-filter: blur(10px);
+        }
+
+        #camera-panel h3 {
+            color: white;
+            font-size: 14px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn.off {
+            background: rgba(80, 30, 30, 0.7);
+            border-color: rgba(255, 100, 100, 0.3);
+            color: rgba(255, 150, 150, 0.8);
+        }
+
+        .btn.off:hover {
+            background: rgba(100, 40, 40, 0.7);
+        }
+
+        .save-btn {
+            background: rgba(20, 60, 40, 0.7) !important;
+            border-color: rgba(100, 200, 150, 0.3) !important;
+            color: rgba(150, 255, 200, 0.8) !important;
+        }
+
+        .save-btn:hover {
+            background: rgba(30, 80, 50, 0.7) !important;
+        }
+
+        /* Menu sections */
+        .menu-section {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 6px;
+            margin-top: 2px;
+        }
+
+        .menu-section:first-child {
+            border-top: none;
+            padding-top: 0;
+            margin-top: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container">
+        <div id="upload-screen">
+            <h1>✨ God Rays Viewer</h1>
+            <p>Upload your 3D model to view with volumetric light rays</p>
+            <div id="drop-zone">
+                <svg viewBox="0 0 24 24">
+                    <path
+                        d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z" />
+                </svg>
+                <span>Drop GLB file here or click to upload</span>
+                <small>.glb files only</small>
+            </div>
+            <input type="file" id="file-input" accept=".glb">
+        </div>
+
+        <div id="loading">
+            <div class="spinner"></div>
+            <div>Loading model...</div>
+        </div>
+
+        <!-- Removed: Load New File button - this viewer is only for 33.glb -->
+
+        <div id="parts-panel">
+            <h3>📦 Model Parts</h3>
+            <div class="part-actions">
+                <button id="show-all-parts">Show All</button>
+                <button id="hide-all-parts">Hide All</button>
+            </div>
+            <div id="parts-list"></div>
+            <div id="strobe-target-info">☀️ Rays source: <span id="strobe-target-name">Plane024</span></div>
+            <button id="clear-strobe-target" class="btn"
+                style="width: 100%; margin-top: 8px; font-size: 11px; padding: 6px;">Use Sphere Light</button>
+        </div>
+
+        <div id="godrays-panel">
+            <h3>☀️ God Rays Settings</h3>
+            <div class="slider-group">
+                <label>Density: <span id="density-value">1.0</span></label>
+                <input type="range" id="density-slider" min="0" max="200" value="100">
+            </div>
+            <div class="slider-group">
+                <label>Weight: <span id="weight-value">0.5</span></label>
+                <input type="range" id="weight-slider" min="0" max="100" value="50">
+            </div>
+            <div class="slider-group">
+                <label>Decay: <span id="decay-value">0.9</span></label>
+                <input type="range" id="decay-slider" min="50" max="100" value="90">
+            </div>
+            <div class="slider-group">
+                <label>Exposure: <span id="exposure-value">0.3</span></label>
+                <input type="range" id="exposure-slider" min="0" max="100" value="30">
+            </div>
+            <div class="slider-group">
+                <label>Samples: <span id="samples-value">20</span></label>
+                <input type="range" id="samples-slider" min="10" max="60" value="20">
+            </div>
+            <h4 style="color: #aaa; font-size: 12px; margin: 15px 0 10px;">Light Position</h4>
+            <div class="slider-row">
+                <div class="slider-group">
+                    <label>X: <span id="light-x-value">0</span></label>
+                    <input type="range" id="light-x-slider" min="-100" max="100" value="0">
+                </div>
+                <div class="slider-group">
+                    <label>Y: <span id="light-y-value">0</span></label>
+                    <input type="range" id="light-y-slider" min="-100" max="100" value="0">
+                </div>
+            </div>
+            <div class="slider-group">
+                <label>Z: <span id="light-z-value">-50</span></label>
+                <input type="range" id="light-z-slider" min="-100" max="50" value="-50">
+            </div>
+            <div class="slider-group">
+                <label>Light Size: <span id="light-size-value">100</span>%</label>
+                <input type="range" id="light-size-slider" min="10" max="300" value="100">
+            </div>
+            <button id="reset-godrays-btn" class="btn" style="width: 100%; margin-top: 10px; font-size: 11px;">Reset
+                Settings</button>
+        </div>
+
+        <div id="resize-panel"
+            style="display: none; position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 15px 20px; z-index: 100; backdrop-filter: blur(10px);">
+            <div style="color: white; font-size: 12px; margin-bottom: 10px;">Model Scale: <span
+                    id="scale-value">100</span>%</div>
+            <input type="range" id="scale-slider" min="10" max="300" value="100" style="width: 200px; cursor: pointer;">
+        </div>
+
+        <div id="camera-panel">
+            <h3>📷 Camera & Lighting</h3>
+            <h4 style="color: #aaa; font-size: 12px; margin: 0 0 10px;">Camera Position</h4>
+            <div class="slider-row">
+                <div class="slider-group">
+                    <label>X: <span id="cam-x-value">0</span></label>
+                    <input type="range" id="cam-x-slider" min="-50" max="50" value="0">
+                </div>
+                <div class="slider-group">
+                    <label>Y: <span id="cam-y-value">2</span></label>
+                    <input type="range" id="cam-y-slider" min="-20" max="30" value="2">
+                </div>
+            </div>
+            <div class="slider-group">
+                <label>Z (Distance): <span id="cam-z-value">15</span></label>
+                <input type="range" id="cam-z-slider" min="1" max="50" value="15">
+            </div>
+            <div class="slider-group">
+                <label>FOV: <span id="cam-fov-value">60</span>°</label>
+                <input type="range" id="cam-fov-slider" min="20" max="120" value="60">
+            </div>
+            <h4 style="color: #aaa; font-size: 12px; margin: 15px 0 10px;">Model Position</h4>
+            <div class="slider-row">
+                <div class="slider-group">
+                    <label>X: <span id="model-x-value">0</span></label>
+                    <input type="range" id="model-x-slider" min="-10" max="10" value="0">
+                </div>
+                <div class="slider-group">
+                    <label>Y: <span id="model-y-value">0</span></label>
+                    <input type="range" id="model-y-slider" min="-10" max="10" value="0">
+                </div>
+            </div>
+            <div class="slider-group">
+                <label>Z: <span id="model-z-value">0</span></label>
+                <input type="range" id="model-z-slider" min="-10" max="10" value="0">
+            </div>
+            <h4 style="color: #aaa; font-size: 12px; margin: 15px 0 10px;">Environment Lighting</h4>
+            <div class="slider-group">
+                <label>Ambient: <span id="ambient-value">0.1</span></label>
+                <input type="range" id="ambient-slider" min="0" max="100" value="10">
+            </div>
+            <div class="slider-group">
+                <label>Environment: <span id="env-value">0.5</span></label>
+                <input type="range" id="env-slider" min="0" max="200" value="50">
+            </div>
+            <button id="reset-camera-btn" class="btn" style="width: 100%; margin-top: 10px; font-size: 11px;">Reset
+                Camera</button>
+        </div>
+
+        <!-- Environment Lighting Panel -->
+        <div id="env-panel"
+            style="display: none; position: fixed; bottom: 80px; left: 20px; background: rgba(0,0,0,0.9); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 15px 20px; z-index: 150; backdrop-filter: blur(10px); min-width: 280px; max-height: 70vh; overflow-y: auto;">
+            <div id="env-panel-handle"
+                style="width: 100%; height: 16px; background: rgba(255,255,255,0.05); border-radius: 6px; margin-bottom: 10px; cursor: grab; display: flex; align-items: center; justify-content: center;">
+                <div style="width: 30px; height: 3px; background: rgba(255,255,255,0.3); border-radius: 2px;"></div>
+            </div>
+            <h3
+                style="color: white; font-size: 14px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                🌍 Environment Lighting</h3>
+
+            <h4 style="color: #aaa; font-size: 11px; margin: 10px 0 8px;">Ambient Light</h4>
+            <div class="slider-group">
+                <label>Intensity: <span id="ambient-value2">0.1</span></label>
+                <input type="range" id="ambient-slider2" min="0" max="200" value="10">
+            </div>
+            <div class="slider-group">
+                <label>Color: <input type="color" id="ambient-color" value="#ffffff"
+                        style="width: 50px; height: 20px; border: none; cursor: pointer;"></label>
+            </div>
+
+            <h4 style="color: #aaa; font-size: 11px; margin: 15px 0 8px;">Hemisphere Light (Sky/Ground)</h4>
+            <div class="slider-group">
+                <label>Intensity: <span id="env-value2">0.5</span></label>
+                <input type="range" id="env-slider2" min="0" max="300" value="50">
+            </div>
+            <div class="slider-row">
+                <div class="slider-group">
+                    <label>Sky: <input type="color" id="hemi-sky-color" value="#ffffff"
+                            style="width: 40px; height: 18px; border: none; cursor: pointer;"></label>
+                </div>
+                <div class="slider-group">
+                    <label>Ground: <input type="color" id="hemi-ground-color" value="#444444"
+                            style="width: 40px; height: 18px; border: none; cursor: pointer;"></label>
+                </div>
+            </div>
+
+            <h4 style="color: #aaa; font-size: 11px; margin: 15px 0 8px;">Directional Light (Sun)</h4>
+            <div class="slider-group">
+                <label>Intensity: <span id="dir-value">0.3</span></label>
+                <input type="range" id="dir-slider" min="0" max="300" value="30">
+            </div>
+            <div class="slider-group">
+                <label>Color: <input type="color" id="dir-color" value="#ffffff"
+                        style="width: 50px; height: 20px; border: none; cursor: pointer;"></label>
+            </div>
+            <div class="slider-row">
+                <div class="slider-group">
+                    <label>X: <span id="dir-x-value">5</span></label>
+                    <input type="range" id="dir-x-slider" min="-50" max="50" value="5">
+                </div>
+                <div class="slider-group">
+                    <label>Y: <span id="dir-y-value">10</span></label>
+                    <input type="range" id="dir-y-slider" min="-50" max="50" value="10">
+                </div>
+            </div>
+            <div class="slider-group">
+                <label>Z: <span id="dir-z-value">5</span></label>
+                <input type="range" id="dir-z-slider" min="-50" max="50" value="5">
+            </div>
+
+            <h4 style="color: #aaa; font-size: 11px; margin: 15px 0 8px;">🔦 Selective Spotlight</h4>
+            <p style="color: #666; font-size: 10px; margin-bottom: 8px;">Spotlight that only illuminates selected parts
+            </p>
+            <div class="slider-group">
+                <label>Intensity: <span id="dir2-value">0.0</span></label>
+                <input type="range" id="dir2-slider" min="0" max="500" value="0">
+            </div>
+            <div class="slider-group">
+                <label>Color: <input type="color" id="dir2-color" value="#ffffff"
+                        style="width: 50px; height: 20px; border: none; cursor: pointer;"></label>
+            </div>
+            <div class="slider-row">
+                <div class="slider-group">
+                    <label>X: <span id="spot-x-value">0</span></label>
+                    <input type="range" id="spot-x-slider" min="-30" max="30" value="0">
+                </div>
+                <div class="slider-group">
+                    <label>Y: <span id="spot-y-value">10</span></label>
+                    <input type="range" id="spot-y-slider" min="-30" max="30" value="10">
+                </div>
+            </div>
+            <div class="slider-group">
+                <label>Z: <span id="spot-z-value">10</span></label>
+                <input type="range" id="spot-z-slider" min="-30" max="30" value="10">
+            </div>
+            <div class="slider-row">
+                <div class="slider-group">
+                    <label>Angle: <span id="spot-angle-value">45</span>°</label>
+                    <input type="range" id="spot-angle-slider" min="10" max="90" value="45">
+                </div>
+                <div class="slider-group">
+                    <label>Penumbra: <span id="spot-penumbra-value">0.5</span></label>
+                    <input type="range" id="spot-penumbra-slider" min="0" max="100" value="50">
+                </div>
+            </div>
+            <div class="slider-group" style="margin-top: 8px;">
+                <label style="display: block; margin-bottom: 5px;">Parts to Illuminate:</label>
+                <div id="dir2-targets"
+                    style="max-height: 150px; overflow-y: auto; background: rgba(0,0,0,0.3); border-radius: 4px; padding: 8px;">
+                </div>
+            </div>
+
+            <h4 style="color: #aaa; font-size: 11px; margin: 15px 0 8px;">Point Light (Fill)</h4>
+            <div class="slider-group">
+                <label>Intensity: <span id="point-value">1.0</span></label>
+                <input type="range" id="point-slider" min="0" max="300" value="100">
+            </div>
+            <div class="slider-group">
+                <label>Color: <input type="color" id="point-color" value="#ffffff"
+                        style="width: 50px; height: 20px; border: none; cursor: pointer;"></label>
+            </div>
+            <div class="slider-row">
+                <div class="slider-group">
+                    <label>X: <span id="point-x-value">0</span></label>
+                    <input type="range" id="point-x-slider" min="-30" max="30" value="0">
+                </div>
+                <div class="slider-group">
+                    <label>Y: <span id="point-y-value">5</span></label>
+                    <input type="range" id="point-y-slider" min="-30" max="30" value="5">
+                </div>
+            </div>
+            <div class="slider-group">
+                <label>Z: <span id="point-z-value">5</span></label>
+                <input type="range" id="point-z-slider" min="-30" max="30" value="5">
+            </div>
+
+            <button id="reset-env-btn" class="btn" style="width: 100%; margin-top: 15px; font-size: 11px;">Reset All
+                Lighting</button>
+        </div>
+
+        <!-- Minimalist Toggle Controls - Single Button -->
+        <div class="toggle-controls">
+            <!-- Rays ON/OFF Toggle -->
+            <button class="toggle-btn active" id="rays-toggle" title="Toggle Rays ON/OFF">
+                <svg viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2" />
+                    <circle cx="12" cy="12" r="4" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Menu icon - top right -->
+        <div class="menu-icon" id="menuIcon">33</div>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { EffectComposer, EffectPass, GodRaysEffect, RenderPass } from 'postprocessing';
+
+        // Scene setup
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x000000);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
+        camera.position.set(0, 2, 15);
+
+        const renderer = new THREE.WebGLRenderer({
+            powerPreference: "high-performance",
+            antialias: false,
+            stencil: false,
+            depth: false,
+            preserveDrawingBuffer: true
+        });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        document.getElementById('container').appendChild(renderer.domElement);
+
+        // Orbit controls
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 1;
+
+        // Auto-save when user interacts with orbit controls
+        controls.addEventListener('end', () => {
+            if (typeof saveCameraSettings === 'function') {
+                saveCameraSettings();
+            }
+        });
+
+        // Light source mesh for God Rays
+        const lightGeometry = new THREE.SphereGeometry(2, 32, 32);
+        const lightMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+                time: { value: 0 },
+                color: { value: new THREE.Color(0xffffff) }
+            },
+            vertexShader: `
+                varying vec2 vUv;
+                void main() {
+                    vUv = uv;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform float time;
+                uniform vec3 color;
+                varying vec2 vUv;
+                void main() {
+                    float dist = distance(vUv, vec2(0.5));
+                    float pulse = 0.8 + 0.2 * sin(time * 3.0);
+                    float intensity = smoothstep(0.5, 0.0, dist) * pulse;
+                    gl_FragColor = vec4(color * intensity, intensity);
+                }
+            `,
+            transparent: true,
+            blending: THREE.AdditiveBlending
+        });
+
+        const lightSource = new THREE.Mesh(lightGeometry, lightMaterial);
+        lightSource.position.set(0, 0, -10);
+        lightSource.userData.time = lightMaterial.uniforms.time;
+        lightSource.userData.color = lightMaterial.uniforms.color;
+        lightSource.visible = false; // Hidden by default, Plane024 will be used
+        scene.add(lightSource);
+
+        // Create starfield background
+        const starCount = 1500;
+        const starGeometry = new THREE.BufferGeometry();
+        const starPositions = new Float32Array(starCount * 3);
+        const starSizes = new Float32Array(starCount);
+        const starPhases = new Float32Array(starCount); // For twinkling animation
+        const starSpeeds = new Float32Array(starCount); // Twinkle speed
+
+        for (let i = 0; i < starCount; i++) {
+            // Distribute stars in a sphere around the scene
+            const radius = 80 + Math.random() * 120;
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos(2 * Math.random() - 1);
+
+            starPositions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+            starPositions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+            starPositions[i * 3 + 2] = radius * Math.cos(phi);
+
+            starSizes[i] = 0.5 + Math.random() * 2;
+            starPhases[i] = Math.random() * Math.PI * 2;
+            starSpeeds[i] = 0.3 + Math.random() * 1.5; // Random twinkle speed
+        }
+
+        starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+        starGeometry.setAttribute('size', new THREE.BufferAttribute(starSizes, 1));
+
+        const starMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+                time: { value: 0 },
+                phases: { value: starPhases },
+                speeds: { value: starSpeeds }
+            },
+            vertexShader: `
+                attribute float size;
+                varying float vSize;
+                varying float vIndex;
+                void main() {
+                    vSize = size;
+                    vIndex = float(gl_VertexID);
+                    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                    gl_PointSize = size * (200.0 / -mvPosition.z);
+                    gl_Position = projectionMatrix * mvPosition;
+                }
+            `,
+            fragmentShader: `
+                uniform float time;
+                varying float vSize;
+                varying float vIndex;
+                void main() {
+                    // Create circular star shape
+                    vec2 center = gl_PointCoord - vec2(0.5);
+                    float dist = length(center);
+                    if (dist > 0.5) discard;
+                    
+                    // Twinkle effect - each star has unique phase and speed
+                    float phase = vIndex * 0.1;
+                    float speed = 0.5 + fract(vIndex * 0.37) * 1.5;
+                    float twinkle = 0.4 + 0.6 * (0.5 + 0.5 * sin(time * speed + phase));
+                    
+                    // Soft glow
+                    float alpha = (1.0 - dist * 2.0) * twinkle;
+                    gl_FragColor = vec4(1.0, 1.0, 1.0, alpha * 0.8);
+                }
+            `,
+            transparent: true,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
+        });
+
+        const stars = new THREE.Points(starGeometry, starMaterial);
+        scene.add(stars);
+
+        // Ambient light
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
+        scene.add(ambientLight);
+
+        // Hemisphere light for environment lighting
+        const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.5);
+        hemiLight.position.set(0, 20, 0);
+        scene.add(hemiLight);
+
+        // Point light for model illumination
+        const pointLight = new THREE.PointLight(0xffffff, 1, 50);
+        pointLight.position.set(0, 5, 5);
+        scene.add(pointLight);
+
+        // Additional directional light for better visibility
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.3);
+        dirLight.position.set(5, 10, 5);
+        scene.add(dirLight);
+
+        // Selective spotlight - uses layers to only affect specific parts
+        // Layer 0 = default (all objects), Layer 1 = selective light targets
+        const selectiveLight = new THREE.SpotLight(0xffffff, 0, 100, Math.PI / 4, 0.5, 1);
+        selectiveLight.position.set(0, 10, 10);
+        selectiveLight.layers.enable(1); // Only affects layer 1 objects
+        scene.add(selectiveLight);
+        scene.add(selectiveLight.target);
+
+        // Track selective light settings
+        let selectiveLightTargets = [];
+
+        // Enable camera to see layer 1
+        camera.layers.enable(1);
+
+        // Ray source enabled state
+        let raySourceEnabled = true;
+
+        // Post-processing with God Rays
+        let composer = new EffectComposer(renderer);
+        composer.addPass(new RenderPass(scene, camera));
+
+        let godRaysSettings = {
+            density: 1,
+            weight: 0.5,
+            decay: 0.9,
+            exposure: 0.3,
+            samples: 20
+        };
+
+        let godRaysEffect = new GodRaysEffect(camera, lightSource, {
+            height: 480,
+            kernelSize: 2,
+            density: godRaysSettings.density,
+            decay: godRaysSettings.decay,
+            weight: godRaysSettings.weight,
+            exposure: godRaysSettings.exposure,
+            samples: godRaysSettings.samples,
+            clampMax: 0.95
+        });
+
+        let effectPass = new EffectPass(camera, godRaysEffect);
+        composer.addPass(effectPass);
+
+        let godRaysEnabled = true;
+        let animateLight = false;
+        let colorMode = 0;
+
+        // Mouse tracking for ray interaction
+        let mouseX = 0;
+        let mouseY = 0;
+        let mouseInfluence = 0.3; // How much mouse affects rays
+
+        document.addEventListener('mousemove', (e) => {
+            // Normalize mouse position to -1 to 1
+            mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+            mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+        });
+
+        // Model loading
+        let model = null;
+        let modelParts = [];
+        let baseScale = 1;
+        let raySourceMesh = null;
+        let raySourceName = 'Light';
+        const loader = new GLTFLoader();
+
+        function rebuildGodRays() {
+            // Remove old effect pass
+            composer.removePass(effectPass);
+
+            // Create new effect with Plane024 as light source
+            const targetMesh = raySourceMesh || lightSource;
+
+            godRaysEffect = new GodRaysEffect(camera, targetMesh, {
+                height: 480,
+                kernelSize: 2,
+                density: godRaysSettings.density,
+                decay: godRaysSettings.decay,
+                weight: godRaysSettings.weight,
+                exposure: godRaysSettings.exposure,
+                samples: godRaysSettings.samples,
+                clampMax: 0.95
+            });
+
+            effectPass = new EffectPass(camera, godRaysEffect);
+            effectPass.enabled = raySourceEnabled;
+            composer.addPass(effectPass);
+        }
+
+        function buildPartsList() {
+            modelParts = [];
+            const partsList = document.getElementById('parts-list');
+            partsList.innerHTML = '';
+            raySourceMesh = null;
+            raySourceName = 'Plane024';
+            document.getElementById('strobe-target-name').textContent = 'Searching...';
+
+            if (!model) return;
+
+            let partIndex = 0;
+            model.traverse((child) => {
+                if (child.isMesh) {
+                    const partName = child.name || `Part ${partIndex + 1}`;
+                    modelParts.push({ mesh: child, name: partName });
+
+                    // Hide Cube011 by default
+                    if (child.name === 'Cube011') {
+                        child.visible = false;
+                    }
+
+                    // Use Plane024 as the ray source
+                    if (child.name === 'Plane024') {
+                        // Make it emissive so it glows
+                        if (child.material) {
+                            child.material = child.material.clone();
+                            child.material.emissive = new THREE.Color(0xffffff);
+                            child.material.emissiveIntensity = 2;
+                        }
+                        raySourceMesh = child;
+                        raySourceName = 'Plane024';
+                        document.getElementById('strobe-target-name').textContent = raySourceName;
+                        // Hide the default sphere light
+                        lightSource.visible = false;
+                    }
+
+                    const item = document.createElement('div');
+                    item.className = 'part-item';
+
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.checked = child.visible;
+                    checkbox.id = `part-${partIndex}`;
+                    checkbox.addEventListener('change', (e) => {
+                        child.visible = e.target.checked;
+                    });
+
+                    const label = document.createElement('label');
+                    label.htmlFor = `part-${partIndex}`;
+                    label.textContent = partName;
+                    label.title = partName;
+
+                    const rayBtn = document.createElement('button');
+                    rayBtn.className = 'strobe-btn';
+                    if (child.name === 'Plane024') {
+                        rayBtn.classList.add('active');
+                    }
+                    rayBtn.textContent = '☀️';
+                    rayBtn.title = 'Set as ray source';
+                    rayBtn.dataset.partIndex = partIndex;
+                    rayBtn.addEventListener('click', (e) => {
+                        document.querySelectorAll('.strobe-btn').forEach(btn => btn.classList.remove('active'));
+
+                        // Reset previous source
+                        modelParts.forEach(p => {
+                            if (p.mesh.material && p.mesh !== child) {
+                                p.mesh.material.emissiveIntensity = 0.2;
+                            }
+                        });
+
+                        // Make the mesh emissive so it works as a light source
+                        if (child.material) {
+                            child.material = child.material.clone();
+                            child.material.emissive = new THREE.Color(0xffffff);
+                            child.material.emissiveIntensity = 2;
+                        }
+
+                        raySourceMesh = child;
+                        raySourceName = partName;
+                        document.getElementById('strobe-target-name').textContent = partName;
+                        rayBtn.classList.add('active');
+                        lightSource.visible = false;
+
+                        rebuildGodRays();
+                    });
+
+                    item.appendChild(checkbox);
+                    item.appendChild(label);
+                    item.appendChild(rayBtn);
+                    partsList.appendChild(item);
+
+                    partIndex++;
+                }
+            });
+
+            if (modelParts.length === 0) {
+                partsList.innerHTML = '<div style="color: #888; font-size: 12px;">No parts found</div>';
+            }
+
+            // If Plane024 wasn't found, show the sphere light
+            if (!raySourceMesh) {
+                lightSource.visible = true;
+                raySourceName = 'Light (Sphere)';
+                document.getElementById('strobe-target-name').textContent = raySourceName;
+            }
+
+            // Populate selective light targets
+            populateDir2Targets();
+        }
+
+        function populateDir2Targets() {
+            const container = document.getElementById('dir2-targets');
+            container.innerHTML = '';
+
+            modelParts.forEach((part, index) => {
+                const item = document.createElement('div');
+                item.style.cssText = 'display: flex; align-items: center; gap: 5px; padding: 3px 0;';
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `dir2-target-${index}`;
+                checkbox.checked = selectiveLightTargets.includes(part.name);
+                checkbox.addEventListener('change', (e) => {
+                    if (e.target.checked) {
+                        if (!selectiveLightTargets.includes(part.name)) {
+                            selectiveLightTargets.push(part.name);
+                        }
+                        // Enable layer 1 on this mesh so selective light affects it
+                        part.mesh.layers.enable(1);
+                    } else {
+                        selectiveLightTargets = selectiveLightTargets.filter(n => n !== part.name);
+                        // Disable layer 1 on this mesh
+                        part.mesh.layers.disable(1);
+                    }
+                    saveCameraSettings();
+                });
+
+                const label = document.createElement('label');
+                label.htmlFor = `dir2-target-${index}`;
+                label.textContent = part.name;
+                label.style.cssText = 'color: #ccc; font-size: 11px; cursor: pointer;';
+
+                item.appendChild(checkbox);
+                item.appendChild(label);
+                container.appendChild(item);
+            });
+
+            if (modelParts.length === 0) {
+                container.innerHTML = '<div style="color: #666; font-size: 11px;">Load model first</div>';
+            }
+        }
+
+        function applySelectiveLightTargets() {
+            // Apply layer 1 to all targeted parts
+            modelParts.forEach(part => {
+                if (selectiveLightTargets.includes(part.name)) {
+                    part.mesh.layers.enable(1);
+                } else {
+                    part.mesh.layers.disable(1);
+                }
+            });
+        }
+
+        function loadModel(url) {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('upload-screen').style.display = 'none';
+
+            document.getElementById('scale-slider').value = 100;
+            document.getElementById('scale-value').textContent = '100';
+            raySourceMesh = null;
+            raySourceName = 'Plane024';
+            lightSource.visible = false;
+
+            if (model) scene.remove(model);
+
+            loader.load(url,
+                (gltf) => {
+                    model = gltf.scene;
+
+                    const box = new THREE.Box3().setFromObject(model);
+                    const center = box.getCenter(new THREE.Vector3());
+                    const size = box.getSize(new THREE.Vector3());
+
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    const scale = 6 / maxDim;
+                    model.scale.multiplyScalar(scale);
+                    baseScale = scale;
+                    model.position.sub(center.multiplyScalar(scale));
+
+                    model.traverse((child) => {
+                        if (child.isMesh && child.material) {
+                            child.material.emissive = new THREE.Color(0x111111);
+                            child.material.emissiveIntensity = 0.2;
+                        }
+                    });
+
+                    scene.add(model);
+                    document.getElementById('loading').style.display = 'none';
+                    const menuToggleEl = document.getElementById('menu-toggle');
+                    if (menuToggleEl) menuToggleEl.style.display = 'flex';
+
+                    // Apply saved model position if exists
+                    if (window.savedModelPosition) {
+                        model.position.set(
+                            window.savedModelPosition.x,
+                            window.savedModelPosition.y,
+                            window.savedModelPosition.z
+                        );
+                    }
+
+                    // Apply saved model scale
+                    if (window.savedModelScale) {
+                        const newScale = baseScale * (window.savedModelScale / 100);
+                        model.scale.set(newScale, newScale, newScale);
+                    }
+
+                    // Apply saved orbit controls target
+                    if (window.savedControlsTarget) {
+                        controls.target.set(
+                            window.savedControlsTarget.x,
+                            window.savedControlsTarget.y,
+                            window.savedControlsTarget.z
+                        );
+                        controls.update();
+                    }
+
+                    // Apply saved UI states
+                    if (window.savedSettings) {
+                        const s = window.savedSettings;
+
+                        // Update ray source button
+                        // Update rays toggle button
+                        const raysBtn = document.getElementById('rays-toggle');
+                        if (raysBtn) {
+                            raysBtn.classList.toggle('active', raySourceEnabled);
+                            raysBtn.classList.toggle('off', !raySourceEnabled);
+                        }
+
+                        // Apply ray source state - Plane024 only
+                        lightSource.visible = false;
+                        if (raySourceMesh) {
+                            // 2.0 when ON (bright glow), 0.3 when OFF (dim but visible)
+                            raySourceMesh.material.emissiveIntensity = raySourceEnabled ? 2 : 0.3;
+                        }
+                        effectPass.enabled = raySourceEnabled;
+                    }
+
+                    buildPartsList();
+
+                    // Apply saved selective light targets after parts list is built
+                    if (window.savedSettings && window.savedSettings.selectiveTargets) {
+                        selectiveLightTargets = window.savedSettings.selectiveTargets;
+                        applySelectiveLightTargets();
+                        populateDir2Targets();
+                    }
+
+                    // Re-apply camera settings after model loads to ensure they stick
+                    const savedCam = localStorage.getItem(CAMERA_STORAGE_KEY);
+                    if (savedCam) {
+                        try {
+                            const s = JSON.parse(savedCam);
+                            camera.position.set(s.camX ?? 0, s.camY ?? 2, s.camZ ?? 15);
+                            camera.fov = s.fov ?? 60;
+                            camera.updateProjectionMatrix();
+                            if (s.targetX !== undefined) {
+                                controls.target.set(s.targetX, s.targetY ?? 0, s.targetZ ?? 0);
+                            }
+                            controls.update();
+
+                            // Update UI sliders to match actual camera position
+                            document.getElementById('cam-x-slider').value = Math.round(camera.position.x);
+                            document.getElementById('cam-x-value').textContent = Math.round(camera.position.x).toString();
+                            document.getElementById('cam-y-slider').value = Math.round(camera.position.y);
+                            document.getElementById('cam-y-value').textContent = Math.round(camera.position.y).toString();
+                            document.getElementById('cam-z-slider').value = Math.max(1, Math.round(camera.position.z));
+                            document.getElementById('cam-z-value').textContent = Math.round(camera.position.z).toString();
+                        } catch (e) { }
+                    }
+
+                    rebuildGodRays();
+                },
+                undefined,
+                (error) => {
+                    console.error('Error:', error);
+                    document.getElementById('loading').innerHTML = '<div style="color:#f44">Error loading model</div>';
+                }
+            );
+        }
+
+        // Check for URL parameter to auto-load model
+        const urlParams = new URLSearchParams(window.location.search);
+        const modelParam = urlParams.get('model');
+        if (modelParam) {
+            loadModel(modelParam);
+        }
+
+        // File handling
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.name.endsWith('.glb')) {
+                loadModel(URL.createObjectURL(file));
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) loadModel(URL.createObjectURL(file));
+        });
+
+        // Menu toggle (hidden but keep for compatibility)
+        const menuToggleEl = document.getElementById('menu-toggle');
+        if (menuToggleEl) {
+            menuToggleEl.addEventListener('click', function () {
+                this.classList.toggle('open');
+                const controlsEl = document.getElementById('controls');
+                if (controlsEl) controlsEl.classList.toggle('visible');
+            });
+        }
+
+        // Draggable menu (hidden but keep for compatibility)
+        const controlsMenu = document.getElementById('controls');
+        const controlsHandle = document.getElementById('controls-handle');
+        let isDragging = false;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+
+        if (controlsHandle) controlsHandle.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            controlsMenu.classList.add('dragging');
+            const rect = controlsMenu.getBoundingClientRect();
+            dragOffsetX = e.clientX - rect.left;
+            dragOffsetY = e.clientY - rect.top;
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+
+            let newX = e.clientX - dragOffsetX;
+            let newY = e.clientY - dragOffsetY;
+
+            // Keep within viewport bounds
+            const rect = controlsMenu.getBoundingClientRect();
+            const maxX = window.innerWidth - rect.width;
+            const maxY = window.innerHeight - rect.height;
+
+            newX = Math.max(0, Math.min(newX, maxX));
+            newY = Math.max(0, Math.min(newY, maxY));
+
+            controlsMenu.style.left = newX + 'px';
+            controlsMenu.style.top = newY + 'px';
+            controlsMenu.style.right = 'auto';
+            controlsMenu.style.bottom = 'auto';
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                controlsMenu.classList.remove('dragging');
+            }
+        });
+
+        // Touch support for mobile
+        if (controlsHandle) controlsHandle.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            if (controlsMenu) controlsMenu.classList.add('dragging');
+            const rect = controlsMenu ? controlsMenu.getBoundingClientRect() : { left: 0, top: 0 };
+            const touch = e.touches[0];
+            dragOffsetX = touch.clientX - rect.left;
+            dragOffsetY = touch.clientY - rect.top;
+            e.preventDefault();
+        }, { passive: false });
+
+        document.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+
+            const touch = e.touches[0];
+            let newX = touch.clientX - dragOffsetX;
+            let newY = touch.clientY - dragOffsetY;
+
+            const rect = controlsMenu.getBoundingClientRect();
+            const maxX = window.innerWidth - rect.width;
+            const maxY = window.innerHeight - rect.height;
+
+            newX = Math.max(0, Math.min(newX, maxX));
+            newY = Math.max(0, Math.min(newY, maxY));
+
+            controlsMenu.style.left = newX + 'px';
+            controlsMenu.style.top = newY + 'px';
+            controlsMenu.style.right = 'auto';
+            controlsMenu.style.bottom = 'auto';
+        }, { passive: false });
+
+        document.addEventListener('touchend', () => {
+            if (isDragging) {
+                isDragging = false;
+                controlsMenu.classList.remove('dragging');
+            }
+        });
+
+        // Minimalist Controls - Single rays ON/OFF toggle
+        const raysToggleBtn = document.getElementById('rays-toggle');
+
+        // Rays toggle - turns rays ON/OFF
+        // ON: Plane024 glows bright (2.0), god rays visible
+        // OFF: Plane024 dim but visible (0.3), no god rays
+        raysToggleBtn.addEventListener('click', function () {
+            raySourceEnabled = !raySourceEnabled;
+            godRaysEnabled = raySourceEnabled;
+            effectPass.enabled = raySourceEnabled;
+
+            if (raySourceMesh) {
+                // 2.0 when ON (bright glow), 0.3 when OFF (dim but visible)
+                raySourceMesh.material.emissiveIntensity = raySourceEnabled ? 2 : 0.3;
+            }
+            lightSource.visible = false; // Always hide sphere light
+
+            this.classList.toggle('active', raySourceEnabled);
+            this.classList.toggle('off', !raySourceEnabled);
+            saveCameraSettings();
+        });
+
+        // Menu icon - go back to main (cycles through views)
+        document.getElementById('menuIcon').addEventListener('click', () => {
+            window.location.href = '../index.html';
+        });
+
+        // ESC key - go back to main
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                window.location.href = '../index.html';
+            }
+        });
+
+        // Camera settings persistence
+        const CAMERA_STORAGE_KEY = 'godrays-camera-settings';
+
+        function saveCameraSettings() {
+            const settings = {
+                // Camera
+                camX: camera.position.x,
+                camY: camera.position.y,
+                camZ: camera.position.z,
+                fov: camera.fov,
+                // Model
+                modelX: model ? model.position.x : 0,
+                modelY: model ? model.position.y : 0,
+                modelZ: model ? model.position.z : 0,
+                modelScale: model ? model.scale.x / baseScale * 100 : 100,
+                // Orbit controls target
+                targetX: controls.target.x,
+                targetY: controls.target.y,
+                targetZ: controls.target.z,
+                // Ambient light
+                ambient: ambientLight.intensity,
+                ambientColor: '#' + ambientLight.color.getHexString(),
+                // Hemisphere light
+                env: hemiLight.intensity,
+                hemiSkyColor: '#' + hemiLight.color.getHexString(),
+                hemiGroundColor: '#' + hemiLight.groundColor.getHexString(),
+                // Directional light
+                dir: dirLight.intensity,
+                dirColor: '#' + dirLight.color.getHexString(),
+                dirX: dirLight.position.x,
+                dirY: dirLight.position.y,
+                dirZ: dirLight.position.z,
+                // Selective spotlight
+                spotIntensity: selectiveLight.intensity,
+                spotColor: '#' + selectiveLight.color.getHexString(),
+                spotX: selectiveLight.position.x,
+                spotY: selectiveLight.position.y,
+                spotZ: selectiveLight.position.z,
+                spotAngle: (selectiveLight.angle * 180) / Math.PI,
+                spotPenumbra: selectiveLight.penumbra,
+                selectiveTargets: selectiveLightTargets,
+                // Point light
+                point: pointLight.intensity,
+                pointColor: '#' + pointLight.color.getHexString(),
+                pointX: pointLight.position.x,
+                pointY: pointLight.position.y,
+                pointZ: pointLight.position.z,
+                // God rays settings
+                godraysEnabled: godRaysEnabled,
+                godraysDensity: godRaysSettings.density,
+                godraysWeight: godRaysSettings.weight,
+                godraysDecay: godRaysSettings.decay,
+                godraysExposure: godRaysSettings.exposure,
+                godraysSamples: godRaysSettings.samples,
+                raySourceEnabled: raySourceEnabled,
+                autoRotate: controls.autoRotate,
+                colorMode: colorMode
+            };
+            localStorage.setItem(CAMERA_STORAGE_KEY, JSON.stringify(settings));
+        }
+
+        function loadCameraSettings() {
+            const saved = localStorage.getItem(CAMERA_STORAGE_KEY);
+            if (saved) {
+                try {
+                    const settings = JSON.parse(saved);
+
+                    // Apply camera position
+                    camera.position.x = settings.camX ?? 0;
+                    camera.position.y = settings.camY ?? 2;
+                    camera.position.z = settings.camZ ?? 15;
+                    camera.fov = settings.fov ?? 60;
+                    camera.updateProjectionMatrix();
+
+                    // Apply controls target if available
+                    if (settings.targetX !== undefined) {
+                        controls.target.set(
+                            settings.targetX,
+                            settings.targetY ?? 0,
+                            settings.targetZ ?? 0
+                        );
+                    }
+                    controls.update();
+
+                    // Apply ambient light
+                    ambientLight.intensity = settings.ambient ?? 0.1;
+                    if (settings.ambientColor) ambientLight.color.set(settings.ambientColor);
+
+                    // Apply hemisphere light
+                    hemiLight.intensity = settings.env ?? 0.5;
+                    if (settings.hemiSkyColor) hemiLight.color.set(settings.hemiSkyColor);
+                    if (settings.hemiGroundColor) hemiLight.groundColor.set(settings.hemiGroundColor);
+
+                    // Apply directional light
+                    dirLight.intensity = settings.dir ?? 0.3;
+                    if (settings.dirColor) dirLight.color.set(settings.dirColor);
+                    dirLight.position.x = settings.dirX ?? 5;
+                    dirLight.position.y = settings.dirY ?? 10;
+                    dirLight.position.z = settings.dirZ ?? 5;
+
+                    // Apply point light
+                    pointLight.intensity = settings.point ?? 1;
+                    if (settings.pointColor) pointLight.color.set(settings.pointColor);
+                    pointLight.position.x = settings.pointX ?? 0;
+                    pointLight.position.y = settings.pointY ?? 5;
+                    pointLight.position.z = settings.pointZ ?? 5;
+
+                    // Apply god rays settings
+                    if (settings.godraysDensity !== undefined) godRaysSettings.density = settings.godraysDensity;
+                    if (settings.godraysWeight !== undefined) godRaysSettings.weight = settings.godraysWeight;
+                    if (settings.godraysDecay !== undefined) godRaysSettings.decay = settings.godraysDecay;
+                    if (settings.godraysExposure !== undefined) godRaysSettings.exposure = settings.godraysExposure;
+                    if (settings.godraysSamples !== undefined) godRaysSettings.samples = settings.godraysSamples;
+
+                    // Apply other settings
+                    if (settings.autoRotate !== undefined) controls.autoRotate = settings.autoRotate;
+                    if (settings.colorMode !== undefined) colorMode = settings.colorMode;
+                    if (settings.raySourceEnabled !== undefined) raySourceEnabled = settings.raySourceEnabled;
+
+                    // Update UI sliders - Camera panel
+                    document.getElementById('cam-x-slider').value = settings.camX ?? 0;
+                    document.getElementById('cam-x-value').textContent = Math.round(settings.camX ?? 0).toString();
+                    document.getElementById('cam-y-slider').value = settings.camY ?? 2;
+                    document.getElementById('cam-y-value').textContent = Math.round(settings.camY ?? 2).toString();
+                    document.getElementById('cam-z-slider').value = settings.camZ ?? 15;
+                    document.getElementById('cam-z-value').textContent = Math.round(settings.camZ ?? 15).toString();
+                    document.getElementById('cam-fov-slider').value = settings.fov ?? 60;
+                    document.getElementById('cam-fov-value').textContent = Math.round(settings.fov ?? 60).toString();
+
+                    document.getElementById('model-x-slider').value = settings.modelX ?? 0;
+                    document.getElementById('model-x-value').textContent = Math.round(settings.modelX ?? 0).toString();
+                    document.getElementById('model-y-slider').value = settings.modelY ?? 0;
+                    document.getElementById('model-y-value').textContent = Math.round(settings.modelY ?? 0).toString();
+                    document.getElementById('model-z-slider').value = settings.modelZ ?? 0;
+                    document.getElementById('model-z-value').textContent = Math.round(settings.modelZ ?? 0).toString();
+
+                    // Camera panel lighting sliders
+                    document.getElementById('ambient-slider').value = (settings.ambient ?? 0.1) * 100;
+                    document.getElementById('ambient-value').textContent = (settings.ambient ?? 0.1).toFixed(1);
+                    document.getElementById('env-slider').value = (settings.env ?? 0.5) * 100;
+                    document.getElementById('env-value').textContent = (settings.env ?? 0.5).toFixed(1);
+
+                    // Env panel - Ambient
+                    document.getElementById('ambient-slider2').value = (settings.ambient ?? 0.1) * 100;
+                    document.getElementById('ambient-value2').textContent = (settings.ambient ?? 0.1).toFixed(1);
+                    if (settings.ambientColor) document.getElementById('ambient-color').value = settings.ambientColor;
+
+                    // Env panel - Hemisphere
+                    document.getElementById('env-slider2').value = (settings.env ?? 0.5) * 100;
+                    document.getElementById('env-value2').textContent = (settings.env ?? 0.5).toFixed(1);
+                    if (settings.hemiSkyColor) document.getElementById('hemi-sky-color').value = settings.hemiSkyColor;
+                    if (settings.hemiGroundColor) document.getElementById('hemi-ground-color').value = settings.hemiGroundColor;
+
+                    // Env panel - Directional
+                    document.getElementById('dir-slider').value = (settings.dir ?? 0.3) * 100;
+                    document.getElementById('dir-value').textContent = (settings.dir ?? 0.3).toFixed(1);
+                    if (settings.dirColor) document.getElementById('dir-color').value = settings.dirColor;
+                    document.getElementById('dir-x-slider').value = settings.dirX ?? 5;
+                    document.getElementById('dir-x-value').textContent = Math.round(settings.dirX ?? 5).toString();
+                    document.getElementById('dir-y-slider').value = settings.dirY ?? 10;
+                    document.getElementById('dir-y-value').textContent = Math.round(settings.dirY ?? 10).toString();
+                    document.getElementById('dir-z-slider').value = settings.dirZ ?? 5;
+                    document.getElementById('dir-z-value').textContent = Math.round(settings.dirZ ?? 5).toString();
+
+                    // Selective Spotlight
+                    selectiveLight.intensity = settings.spotIntensity ?? 0;
+                    if (settings.spotColor) selectiveLight.color.set(settings.spotColor);
+                    selectiveLight.position.x = settings.spotX ?? 0;
+                    selectiveLight.position.y = settings.spotY ?? 10;
+                    selectiveLight.position.z = settings.spotZ ?? 10;
+                    selectiveLight.angle = ((settings.spotAngle ?? 45) * Math.PI) / 180;
+                    selectiveLight.penumbra = settings.spotPenumbra ?? 0.5;
+                    if (settings.selectiveTargets) selectiveLightTargets = settings.selectiveTargets;
+
+                    document.getElementById('dir2-slider').value = (settings.spotIntensity ?? 0) * 100;
+                    document.getElementById('dir2-value').textContent = (settings.spotIntensity ?? 0).toFixed(1);
+                    if (settings.spotColor) document.getElementById('dir2-color').value = settings.spotColor;
+                    document.getElementById('spot-x-slider').value = settings.spotX ?? 0;
+                    document.getElementById('spot-x-value').textContent = Math.round(settings.spotX ?? 0).toString();
+                    document.getElementById('spot-y-slider').value = settings.spotY ?? 10;
+                    document.getElementById('spot-y-value').textContent = Math.round(settings.spotY ?? 10).toString();
+                    document.getElementById('spot-z-slider').value = settings.spotZ ?? 10;
+                    document.getElementById('spot-z-value').textContent = Math.round(settings.spotZ ?? 10).toString();
+                    document.getElementById('spot-angle-slider').value = settings.spotAngle ?? 45;
+                    document.getElementById('spot-angle-value').textContent = Math.round(settings.spotAngle ?? 45).toString();
+                    document.getElementById('spot-penumbra-slider').value = (settings.spotPenumbra ?? 0.5) * 100;
+                    document.getElementById('spot-penumbra-value').textContent = (settings.spotPenumbra ?? 0.5).toFixed(1);
+
+                    // Env panel - Point light
+                    document.getElementById('point-slider').value = (settings.point ?? 1) * 100;
+                    document.getElementById('point-value').textContent = (settings.point ?? 1).toFixed(1);
+                    if (settings.pointColor) document.getElementById('point-color').value = settings.pointColor;
+                    document.getElementById('point-x-slider').value = settings.pointX ?? 0;
+                    document.getElementById('point-x-value').textContent = Math.round(settings.pointX ?? 0).toString();
+                    document.getElementById('point-y-slider').value = settings.pointY ?? 5;
+                    document.getElementById('point-y-value').textContent = Math.round(settings.pointY ?? 5).toString();
+                    document.getElementById('point-z-slider').value = settings.pointZ ?? 5;
+                    document.getElementById('point-z-value').textContent = Math.round(settings.pointZ ?? 5).toString();
+
+                    // Scale slider
+                    if (settings.modelScale) {
+                        document.getElementById('scale-slider').value = settings.modelScale;
+                        document.getElementById('scale-value').textContent = Math.round(settings.modelScale).toString();
+                    }
+
+                    // God rays sliders
+                    document.getElementById('density-slider').value = (settings.godraysDensity ?? 1) * 100;
+                    document.getElementById('density-value').textContent = (settings.godraysDensity ?? 1).toFixed(1);
+                    document.getElementById('weight-slider').value = (settings.godraysWeight ?? 0.5) * 100;
+                    document.getElementById('weight-value').textContent = (settings.godraysWeight ?? 0.5).toFixed(2);
+                    document.getElementById('decay-slider').value = (settings.godraysDecay ?? 0.9) * 100;
+                    document.getElementById('decay-value').textContent = (settings.godraysDecay ?? 0.9).toFixed(2);
+                    document.getElementById('exposure-slider').value = (settings.godraysExposure ?? 0.3) * 100;
+                    document.getElementById('exposure-value').textContent = (settings.godraysExposure ?? 0.3).toFixed(2);
+                    document.getElementById('samples-slider').value = settings.godraysSamples ?? 20;
+                    document.getElementById('samples-value').textContent = (settings.godraysSamples ?? 20).toString();
+
+                    // Load toggle states
+                    raySourceEnabled = settings.raySourceEnabled !== false; // Default to true
+                    godRaysEnabled = raySourceEnabled;
+
+                    // Store model position and scale to apply when model loads
+                    window.savedModelPosition = {
+                        x: settings.modelX ?? 0,
+                        y: settings.modelY ?? 0,
+                        z: settings.modelZ ?? 0
+                    };
+                    window.savedModelScale = settings.modelScale ?? 100;
+                    window.savedControlsTarget = {
+                        x: settings.targetX ?? 0,
+                        y: settings.targetY ?? 0,
+                        z: settings.targetZ ?? 0
+                    };
+                    window.savedSettings = settings;
+
+                    return true;
+                } catch (e) {
+                    console.warn('Failed to load camera settings:', e);
+                }
+            }
+            return false;
+        }
+
+        // Load saved settings on startup
+        loadCameraSettings();
+
+        // Camera position sliders
+        document.getElementById('cam-x-slider').addEventListener('input', function () {
+            camera.position.x = parseFloat(this.value);
+            document.getElementById('cam-x-value').textContent = this.value;
+            saveCameraSettings();
+        });
+
+        document.getElementById('cam-y-slider').addEventListener('input', function () {
+            camera.position.y = parseFloat(this.value);
+            document.getElementById('cam-y-value').textContent = this.value;
+            saveCameraSettings();
+        });
+
+        document.getElementById('cam-z-slider').addEventListener('input', function () {
+            camera.position.z = parseFloat(this.value);
+            document.getElementById('cam-z-value').textContent = this.value;
+            saveCameraSettings();
+        });
+
+        document.getElementById('cam-fov-slider').addEventListener('input', function () {
+            camera.fov = parseFloat(this.value);
+            camera.updateProjectionMatrix();
+            document.getElementById('cam-fov-value').textContent = this.value;
+            saveCameraSettings();
+        });
+
+        // Model position sliders
+        document.getElementById('model-x-slider').addEventListener('input', function () {
+            if (model) {
+                model.position.x = parseFloat(this.value);
+            }
+            document.getElementById('model-x-value').textContent = this.value;
+            saveCameraSettings();
+        });
+
+        document.getElementById('model-y-slider').addEventListener('input', function () {
+            if (model) {
+                model.position.y = parseFloat(this.value);
+            }
+            document.getElementById('model-y-value').textContent = this.value;
+            saveCameraSettings();
+        });
+
+        document.getElementById('model-z-slider').addEventListener('input', function () {
+            if (model) {
+                model.position.z = parseFloat(this.value);
+            }
+            document.getElementById('model-z-value').textContent = this.value;
+            saveCameraSettings();
+        });
+
+        // Environment lighting sliders (camera panel)
+        document.getElementById('ambient-slider').addEventListener('input', function () {
+            const val = this.value / 100;
+            ambientLight.intensity = val;
+            document.getElementById('ambient-value').textContent = val.toFixed(1);
+            // Sync with env panel
+            document.getElementById('ambient-slider2').value = this.value;
+            document.getElementById('ambient-value2').textContent = val.toFixed(1);
+            saveCameraSettings();
+        });
+
+        document.getElementById('env-slider').addEventListener('input', function () {
+            const val = this.value / 100;
+            hemiLight.intensity = val;
+            document.getElementById('env-value').textContent = val.toFixed(1);
+            // Sync with env panel
+            document.getElementById('env-slider2').value = this.value;
+            document.getElementById('env-value2').textContent = val.toFixed(1);
+            saveCameraSettings();
+        });
+
+        document.getElementById('reset-camera-btn').addEventListener('click', () => {
+            camera.position.set(0, 2, 15);
+            camera.fov = 60;
+            camera.updateProjectionMatrix();
+
+            document.getElementById('cam-x-slider').value = 0;
+            document.getElementById('cam-x-value').textContent = '0';
+            document.getElementById('cam-y-slider').value = 2;
+            document.getElementById('cam-y-value').textContent = '2';
+            document.getElementById('cam-z-slider').value = 15;
+            document.getElementById('cam-z-value').textContent = '15';
+            document.getElementById('cam-fov-slider').value = 60;
+            document.getElementById('cam-fov-value').textContent = '60';
+
+            if (model) {
+                model.position.set(0, 0, 0);
+            }
+            document.getElementById('model-x-slider').value = 0;
+            document.getElementById('model-x-value').textContent = '0';
+            document.getElementById('model-y-slider').value = 0;
+            document.getElementById('model-y-value').textContent = '0';
+            document.getElementById('model-z-slider').value = 0;
+            document.getElementById('model-z-value').textContent = '0';
+
+            ambientLight.intensity = 0.1;
+            hemiLight.intensity = 0.5;
+            document.getElementById('ambient-slider').value = 10;
+            document.getElementById('ambient-value').textContent = '0.1';
+            document.getElementById('env-slider').value = 50;
+            document.getElementById('env-value').textContent = '0.5';
+
+            controls.reset();
+
+            // Clear saved settings
+            localStorage.removeItem(CAMERA_STORAGE_KEY);
+            window.savedModelPosition = null;
+        });
+
+        // God Rays settings sliders
+        document.getElementById('density-slider').addEventListener('input', function () {
+            godRaysSettings.density = this.value / 100;
+            document.getElementById('density-value').textContent = godRaysSettings.density.toFixed(1);
+            rebuildGodRays();
+            saveCameraSettings();
+        });
+
+        document.getElementById('weight-slider').addEventListener('input', function () {
+            godRaysSettings.weight = this.value / 100;
+            document.getElementById('weight-value').textContent = godRaysSettings.weight.toFixed(2);
+            rebuildGodRays();
+            saveCameraSettings();
+        });
+
+        document.getElementById('decay-slider').addEventListener('input', function () {
+            godRaysSettings.decay = this.value / 100;
+            document.getElementById('decay-value').textContent = godRaysSettings.decay.toFixed(2);
+            rebuildGodRays();
+            saveCameraSettings();
+        });
+
+        document.getElementById('exposure-slider').addEventListener('input', function () {
+            godRaysSettings.exposure = this.value / 100;
+            document.getElementById('exposure-value').textContent = godRaysSettings.exposure.toFixed(2);
+            rebuildGodRays();
+            saveCameraSettings();
+        });
+
+        document.getElementById('samples-slider').addEventListener('input', function () {
+            godRaysSettings.samples = parseInt(this.value);
+            document.getElementById('samples-value').textContent = godRaysSettings.samples;
+            rebuildGodRays();
+            saveCameraSettings();
+        });
+
+        // Light position sliders
+        document.getElementById('light-x-slider').addEventListener('input', function () {
+            lightSource.position.x = this.value / 10;
+            document.getElementById('light-x-value').textContent = this.value;
+        });
+
+        document.getElementById('light-y-slider').addEventListener('input', function () {
+            lightSource.position.y = this.value / 10;
+            document.getElementById('light-y-value').textContent = this.value;
+        });
+
+        document.getElementById('light-z-slider').addEventListener('input', function () {
+            lightSource.position.z = this.value / 10;
+            document.getElementById('light-z-value').textContent = this.value;
+        });
+
+        document.getElementById('light-size-slider').addEventListener('input', function () {
+            const scale = this.value / 100;
+            lightSource.scale.set(scale, scale, scale);
+            document.getElementById('light-size-value').textContent = this.value;
+        });
+
+        document.getElementById('reset-godrays-btn').addEventListener('click', () => {
+            godRaysSettings = { density: 1, weight: 0.5, decay: 0.9, exposure: 0.3, samples: 20 };
+
+            document.getElementById('density-slider').value = 100;
+            document.getElementById('density-value').textContent = '1.0';
+            document.getElementById('weight-slider').value = 50;
+            document.getElementById('weight-value').textContent = '0.5';
+            document.getElementById('decay-slider').value = 90;
+            document.getElementById('decay-value').textContent = '0.9';
+            document.getElementById('exposure-slider').value = 30;
+            document.getElementById('exposure-value').textContent = '0.3';
+            document.getElementById('samples-slider').value = 20;
+            document.getElementById('samples-value').textContent = '20';
+
+            document.getElementById('light-x-slider').value = 0;
+            document.getElementById('light-x-value').textContent = '0';
+            document.getElementById('light-y-slider').value = 0;
+            document.getElementById('light-y-value').textContent = '0';
+            document.getElementById('light-z-slider').value = -50;
+            document.getElementById('light-z-value').textContent = '-50';
+            document.getElementById('light-size-slider').value = 100;
+            document.getElementById('light-size-value').textContent = '100';
+
+            lightSource.position.set(0, 0, -5);
+            lightSource.scale.set(1, 1, 1);
+
+            rebuildGodRays();
+        });
+
+        const resizeToggleEl = document.getElementById('resize-toggle');
+        if (resizeToggleEl) {
+            resizeToggleEl.addEventListener('click', function () {
+                const panel = document.getElementById('resize-panel');
+                if (panel) {
+                    const isVisible = panel.style.display === 'block';
+                    panel.style.display = isVisible ? 'none' : 'block';
+                    this.classList.toggle('active', !isVisible);
+                }
+            });
+        }
+
+        document.getElementById('scale-slider').addEventListener('input', function () {
+            const scalePercent = parseInt(this.value);
+            document.getElementById('scale-value').textContent = scalePercent;
+            if (model) {
+                const newScale = baseScale * (scalePercent / 100);
+                model.scale.set(newScale, newScale, newScale);
+            }
+        });
+
+        // Environment panel toggle
+        const envToggleEl = document.getElementById('env-toggle');
+        if (envToggleEl) {
+            envToggleEl.addEventListener('click', function () {
+                const panel = document.getElementById('env-panel');
+                if (panel) {
+                    const isVisible = panel.style.display === 'block';
+                    panel.style.display = isVisible ? 'none' : 'block';
+                    this.classList.toggle('active', !isVisible);
+                }
+                // Close other panels
+                const camPanel = document.getElementById('camera-panel');
+                const godraysPanel = document.getElementById('godrays-panel');
+                const camBtn = document.getElementById('camera-settings-btn');
+                const godraysBtn = document.getElementById('godrays-settings-btn');
+                if (camPanel) camPanel.style.display = 'none';
+                if (godraysPanel) godraysPanel.style.display = 'none';
+                if (camBtn) camBtn.classList.remove('active');
+                if (godraysBtn) godraysBtn.classList.remove('active');
+            });
+        }
+
+        // Environment lighting sliders (panel version)
+        // Ambient
+        document.getElementById('ambient-slider2').addEventListener('input', function () {
+            const val = parseFloat(this.value) / 100;
+            document.getElementById('ambient-value2').textContent = val.toFixed(1);
+            ambientLight.intensity = val;
+            document.getElementById('ambient-slider').value = this.value;
+            document.getElementById('ambient-value').textContent = val.toFixed(1);
+            saveCameraSettings();
+        });
+
+        document.getElementById('ambient-color').addEventListener('input', function () {
+            ambientLight.color.set(this.value);
+            saveCameraSettings();
+        });
+
+        // Hemisphere
+        document.getElementById('env-slider2').addEventListener('input', function () {
+            const val = parseFloat(this.value) / 100;
+            document.getElementById('env-value2').textContent = val.toFixed(1);
+            hemiLight.intensity = val;
+            document.getElementById('env-slider').value = this.value;
+            document.getElementById('env-value').textContent = val.toFixed(1);
+            saveCameraSettings();
+        });
+
+        document.getElementById('hemi-sky-color').addEventListener('input', function () {
+            hemiLight.color.set(this.value);
+            saveCameraSettings();
+        });
+
+        document.getElementById('hemi-ground-color').addEventListener('input', function () {
+            hemiLight.groundColor.set(this.value);
+            saveCameraSettings();
+        });
+
+        // Directional
+        document.getElementById('dir-slider').addEventListener('input', function () {
+            const val = parseFloat(this.value) / 100;
+            document.getElementById('dir-value').textContent = val.toFixed(1);
+            dirLight.intensity = val;
+            saveCameraSettings();
+        });
+
+        document.getElementById('dir-color').addEventListener('input', function () {
+            dirLight.color.set(this.value);
+            saveCameraSettings();
+        });
+
+        document.getElementById('dir-x-slider').addEventListener('input', function () {
+            dirLight.position.x = parseFloat(this.value);
+            document.getElementById('dir-x-value').textContent = this.value;
+            saveCameraSettings();
+        });
+
+        document.getElementById('dir-y-slider').addEventListener('input', function () {
+            dirLight.position.y = parseFloat(this.value);
+            document.getElementById('dir-y-value').textContent = this.value;
+            saveCameraSettings();
+        });
+
+        document.getElementById('dir-z-slider').addEventListener('input', function () {
+            dirLight.position.z = parseFloat(this.value);
+            document.getElementById('dir-z-value').textContent = this.value;
+            saveCameraSettings();
+        });
+
+        // Selective Spotlight controls
+        document.getElementById('dir2-slider').addEventListener('input', function () {
+            const val = parseFloat(this.value) / 100;
+            document.getElementById('dir2-value').textContent = val.toFixed(1);
+            selectiveLight.intensity = val;
+            saveCameraSettings();
+        });
+
+        document.getElementById('dir2-color').addEventListener('input', function () {
+            selectiveLight.color.set(this.value);
+            saveCameraSettings();
+        });
+
+        document.getElementById('spot-x-slider').addEventListener('input', function () {
+            selectiveLight.position.x = parseFloat(this.value);
+            document.getElementById('spot-x-value').textContent = this.value;
+            saveCameraSettings();
+        });
+
+        document.getElementById('spot-y-slider').addEventListener('input', function () {
+            selectiveLight.position.y = parseFloat(this.value);
+            document.getElementById('spot-y-value').textContent = this.value;
+            saveCameraSettings();
+        });
+
+        document.getElementById('spot-z-slider').addEventListener('input', function () {
+            selectiveLight.position.z = parseFloat(this.value);
+            document.getElementById('spot-z-value').textContent = this.value;
+            saveCameraSettings();
+        });
+
+        document.getElementById('spot-angle-slider').addEventListener('input', function () {
+            const val = parseFloat(this.value);
+            document.getElementById('spot-angle-value').textContent = val;
+            selectiveLight.angle = (val * Math.PI) / 180;
+            saveCameraSettings();
+        });
+
+        document.getElementById('spot-penumbra-slider').addEventListener('input', function () {
+            const val = parseFloat(this.value) / 100;
+            document.getElementById('spot-penumbra-value').textContent = val.toFixed(1);
+            selectiveLight.penumbra = val;
+            saveCameraSettings();
+        });
+
+        // Point light
+        document.getElementById('point-slider').addEventListener('input', function () {
+            const val = parseFloat(this.value) / 100;
+            document.getElementById('point-value').textContent = val.toFixed(1);
+            pointLight.intensity = val;
+            saveCameraSettings();
+        });
+
+        document.getElementById('point-color').addEventListener('input', function () {
+            pointLight.color.set(this.value);
+            saveCameraSettings();
+        });
+
+        document.getElementById('point-x-slider').addEventListener('input', function () {
+            pointLight.position.x = parseFloat(this.value);
+            document.getElementById('point-x-value').textContent = this.value;
+            saveCameraSettings();
+        });
+
+        document.getElementById('point-y-slider').addEventListener('input', function () {
+            pointLight.position.y = parseFloat(this.value);
+            document.getElementById('point-y-value').textContent = this.value;
+            saveCameraSettings();
+        });
+
+        document.getElementById('point-z-slider').addEventListener('input', function () {
+            pointLight.position.z = parseFloat(this.value);
+            document.getElementById('point-z-value').textContent = this.value;
+            saveCameraSettings();
+        });
+
+        document.getElementById('reset-env-btn').addEventListener('click', () => {
+            // Reset ambient
+            ambientLight.intensity = 0.1;
+            ambientLight.color.set('#ffffff');
+            document.getElementById('ambient-slider2').value = 10;
+            document.getElementById('ambient-value2').textContent = '0.1';
+            document.getElementById('ambient-color').value = '#ffffff';
+            document.getElementById('ambient-slider').value = 10;
+            document.getElementById('ambient-value').textContent = '0.1';
+
+            // Reset hemisphere
+            hemiLight.intensity = 0.5;
+            hemiLight.color.set('#ffffff');
+            hemiLight.groundColor.set('#444444');
+            document.getElementById('env-slider2').value = 50;
+            document.getElementById('env-value2').textContent = '0.5';
+            document.getElementById('hemi-sky-color').value = '#ffffff';
+            document.getElementById('hemi-ground-color').value = '#444444';
+            document.getElementById('env-slider').value = 50;
+            document.getElementById('env-value').textContent = '0.5';
+
+            // Reset directional
+            dirLight.intensity = 0.3;
+            dirLight.color.set('#ffffff');
+            dirLight.position.set(5, 10, 5);
+            document.getElementById('dir-slider').value = 30;
+            document.getElementById('dir-value').textContent = '0.3';
+            document.getElementById('dir-color').value = '#ffffff';
+            document.getElementById('dir-x-slider').value = 5;
+            document.getElementById('dir-x-value').textContent = '5';
+            document.getElementById('dir-y-slider').value = 10;
+            document.getElementById('dir-y-value').textContent = '10';
+            document.getElementById('dir-z-slider').value = 5;
+            document.getElementById('dir-z-value').textContent = '5';
+
+            // Reset selective spotlight
+            selectiveLight.intensity = 0;
+            selectiveLight.color.set('#ffffff');
+            selectiveLight.position.set(0, 10, 10);
+            selectiveLight.angle = Math.PI / 4;
+            selectiveLight.penumbra = 0.5;
+            selectiveLightTargets = [];
+            // Remove layer 1 from all parts
+            modelParts.forEach(part => part.mesh.layers.disable(1));
+
+            document.getElementById('dir2-slider').value = 0;
+            document.getElementById('dir2-value').textContent = '0.0';
+            document.getElementById('dir2-color').value = '#ffffff';
+            document.getElementById('spot-x-slider').value = 0;
+            document.getElementById('spot-x-value').textContent = '0';
+            document.getElementById('spot-y-slider').value = 10;
+            document.getElementById('spot-y-value').textContent = '10';
+            document.getElementById('spot-z-slider').value = 10;
+            document.getElementById('spot-z-value').textContent = '10';
+            document.getElementById('spot-angle-slider').value = 45;
+            document.getElementById('spot-angle-value').textContent = '45';
+            document.getElementById('spot-penumbra-slider').value = 50;
+            document.getElementById('spot-penumbra-value').textContent = '0.5';
+            populateDir2Targets(); // Refresh checkboxes
+
+            // Reset point light
+            pointLight.intensity = 1;
+            pointLight.color.set('#ffffff');
+            pointLight.position.set(0, 5, 5);
+            document.getElementById('point-slider').value = 100;
+            document.getElementById('point-value').textContent = '1.0';
+            document.getElementById('point-color').value = '#ffffff';
+            document.getElementById('point-x-slider').value = 0;
+            document.getElementById('point-x-value').textContent = '0';
+            document.getElementById('point-y-slider').value = 5;
+            document.getElementById('point-y-value').textContent = '5';
+            document.getElementById('point-z-slider').value = 5;
+            document.getElementById('point-z-value').textContent = '5';
+
+            updateSelectiveLighting();
+            saveCameraSettings();
+        });
+
+        // Make env panel draggable
+        const envPanel = document.getElementById('env-panel');
+        const envHandle = document.getElementById('env-panel-handle');
+        let isEnvDragging = false;
+        let envDragOffsetX = 0;
+        let envDragOffsetY = 0;
+
+        envHandle.addEventListener('mousedown', (e) => {
+            isEnvDragging = true;
+            const rect = envPanel.getBoundingClientRect();
+            envDragOffsetX = e.clientX - rect.left;
+            envDragOffsetY = e.clientY - rect.top;
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isEnvDragging) return;
+
+            let newX = e.clientX - envDragOffsetX;
+            let newY = e.clientY - envDragOffsetY;
+
+            const rect = envPanel.getBoundingClientRect();
+            const maxX = window.innerWidth - rect.width;
+            const maxY = window.innerHeight - rect.height;
+
+            newX = Math.max(0, Math.min(newX, maxX));
+            newY = Math.max(0, Math.min(newY, maxY));
+
+            envPanel.style.left = newX + 'px';
+            envPanel.style.top = newY + 'px';
+            envPanel.style.right = 'auto';
+            envPanel.style.bottom = 'auto';
+        });
+
+        document.addEventListener('mouseup', () => {
+            isEnvDragging = false;
+        });
+
+        // Save camera position functionality (hidden but keep for compatibility)
+        const saveCameraBtn = document.getElementById('save-camera-btn');
+        if (saveCameraBtn) {
+            saveCameraBtn.addEventListener('click', function () {
+                saveCameraSettings();
+                // Visual feedback
+                this.style.background = 'rgba(0, 255, 100, 0.3)';
+                const labelEl = this.querySelector('.label');
+                if (labelEl) {
+                    const originalLabel = labelEl.textContent;
+                    labelEl.textContent = 'Saved!';
+                    setTimeout(() => {
+                        this.style.background = '';
+                        labelEl.textContent = originalLabel;
+                    }, 1500);
+                }
+            });
+        }
+
+        // Save image functionality (hidden but keep for compatibility)
+        const saveImageBtn = document.getElementById('save-image-btn');
+        if (saveImageBtn) {
+            saveImageBtn.addEventListener('click', () => {
+                const controlsEl = document.getElementById('controls');
+                const partsPanel = document.getElementById('parts-panel');
+                const resizePanel = document.getElementById('resize-panel');
+                const godraysPanel = document.getElementById('godrays-panel');
+                const envPanel = document.getElementById('env-panel');
+                const menuToggle = document.getElementById('menu-toggle');
+
+                if (controlsEl) controlsEl.classList.remove('visible');
+                if (menuToggle) {
+                    menuToggle.classList.remove('open');
+                    menuToggle.style.display = 'none';
+                }
+                if (partsPanel) partsPanel.style.display = 'none';
+                if (resizePanel) resizePanel.style.display = 'none';
+                if (godraysPanel) godraysPanel.style.display = 'none';
+                if (envPanel) envPanel.style.display = 'none';
+
+                composer.render();
+
+                const link = document.createElement('a');
+                link.download = '33-render-' + Date.now() + '.png';
+                link.href = renderer.domElement.toDataURL('image/png');
+                link.click();
+
+                if (menuToggle) menuToggle.style.display = 'flex';
+            });
+        }
+
+        // Animation
+        const clock = new THREE.Clock();
+
+        // Color values for light (kept for compatibility even though button is hidden)
+        const colorValues = [0xffffff, 0xffaa00, 0x00ffff, 0xff00ff, null];
+
+        function getColor(t) {
+            if (colorMode === 4) { // Rainbow
+                return new THREE.Color().setHSL((t * 0.1) % 1, 1, 0.5);
+            }
+            return new THREE.Color(colorValues[colorMode]);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const t = clock.getElapsedTime();
+
+            // Update starfield twinkling
+            starMaterial.uniforms.time.value = t;
+
+            // Stars stay static - only twinkle, no movement
+
+            // Update light shader time
+            lightSource.userData.time.value = t;
+
+            // Update light color
+            const currentColor = getColor(t);
+            lightSource.userData.color.value = currentColor;
+
+            // Update ray source mesh color if set
+            if (raySourceMesh && raySourceMesh.material && raySourceEnabled) {
+                raySourceMesh.material.emissive = currentColor;
+            }
+
+            // Mouse influence on rays - subtle position offset based on mouse
+            if (raySourceMesh && model) {
+                // Get the base position of Plane024 in world space
+                const basePos = new THREE.Vector3();
+                raySourceMesh.getWorldPosition(basePos);
+
+                // Apply subtle mouse-based offset to god rays effect
+                // This creates the illusion of rays following the mouse
+                const mouseOffsetX = mouseX * mouseInfluence * 2;
+                const mouseOffsetY = mouseY * mouseInfluence * 2;
+
+                // Update light source position for god rays to follow mouse slightly
+                if (!animateLight) {
+                    lightSource.position.x = basePos.x + mouseOffsetX;
+                    lightSource.position.y = basePos.y + mouseOffsetY;
+                    lightSource.position.z = basePos.z;
+                }
+            }
+
+            // Animate light position if enabled
+            if (animateLight && !raySourceMesh) {
+                lightSource.position.x = Math.cos(t) * 4 + mouseX * 2;
+                lightSource.position.y = Math.sin(t * 0.6) * 4 + mouseY * 2;
+            }
+
+            controls.update();
+            composer.render();
+        }
+
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+
+</html>

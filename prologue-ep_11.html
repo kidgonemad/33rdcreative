@@ -1,0 +1,2544 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prologue EP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #f5f5f5;
+            font-family: 'Montserrat', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .transition-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        .transition-black {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            height: 0;
+            background: #0a0a0a;
+            transform: translateY(-50%);
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: opacity 0.4s;
+        }
+
+        .main-content.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .container {
+            position: relative;
+            width: 700px;
+            height: 320px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .gradient-bar {
+            position: relative;
+            display: flex;
+            align-items: center;
+            height: 280px;
+        }
+
+        .bar-segment {
+            cursor: pointer;
+            position: relative;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            transform-origin: center;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .gradient-bar.squishing .bar-segment {
+            transform: scaleY(0.01);
+        }
+
+        .bar-segment:first-child {
+            border-radius: 3px 0 0 3px;
+        }
+
+        .bar-segment:last-child {
+            border-radius: 0 3px 3px 0;
+        }
+
+        .bar-segment .track-title {
+            position: absolute;
+            font-size: 22px;
+            font-weight: 300;
+            letter-spacing: 6px;
+            color: rgba(255, 255, 255, 0.8);
+            text-transform: uppercase;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: opacity 0.3s, transform 0.3s;
+            white-space: nowrap;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .bar-segment.expanded .track-title {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .bar-segment .texture {
+            display: none;
+        }
+
+        .bar-segment.expanded .texture {
+            opacity: 1;
+        }
+
+        .dark-content {
+            position: fixed;
+            inset: 0;
+            background: #0a0a0a;
+            opacity: 0;
+            pointer-events: none;
+            display: flex;
+            align-items: flex-start;
+            justify-content: flex-end;
+            padding: 20px;
+            z-index: 100;
+        }
+
+        .dark-content.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .mini-container {
+            transform: scale(0.15);
+            transform-origin: top right;
+        }
+
+        .gradient-bar-mini {
+            display: flex;
+            align-items: center;
+            height: 280px;
+        }
+
+        .bar-segment-mini {
+            cursor: pointer;
+            position: relative;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .bar-segment-mini:first-child {
+            border-radius: 3px 0 0 3px;
+        }
+
+        .bar-segment-mini:last-child {
+            border-radius: 0 3px 3px 0;
+        }
+
+        .bar-segment-mini .track-title {
+            position: absolute;
+            font-size: 22px;
+            font-weight: 300;
+            letter-spacing: 6px;
+            color: rgba(255, 255, 255, 0.8);
+            text-transform: uppercase;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: opacity 0.3s, transform 0.3s;
+            white-space: nowrap;
+        }
+
+        .bar-segment-mini.expanded .track-title {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .orb {
+            position: fixed;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            filter: blur(50px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+            z-index: 50;
+        }
+
+        .dark-content.visible~.orb {
+            opacity: 0.8;
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 28px;
+            margin-top: 60px;
+            opacity: 0.4;
+        }
+
+        .social-icons svg {
+            width: 20px;
+            height: 20px;
+            fill: #999;
+            cursor: pointer;
+            transition: fill 0.3s, transform 0.3s;
+        }
+
+        .social-icons svg:hover {
+            fill: #666;
+            transform: scale(1.15);
+        }
+
+        .current-track {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            font-size: 14px;
+            letter-spacing: 4px;
+            font-weight: 500;
+            opacity: 0;
+            transition: opacity 0.5s;
+            text-transform: uppercase;
+            z-index: 200;
+        }
+
+        .dark-content.visible~.current-track {
+            opacity: 1;
+        }
+
+        .esc-hint {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #444;
+            font-size: 11px;
+            letter-spacing: 2px;
+            opacity: 0;
+            transition: opacity 0.5s;
+            z-index: 200;
+        }
+
+        .dark-content.visible~.esc-hint {
+            opacity: 0.5;
+        }
+
+        /* Menu Icon */
+        .menu-icon {
+            position: fixed;
+            top: 25px;
+            right: 25px;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            z-index: 500;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            transition: opacity 0.3s;
+            transform: rotate(90deg);
+        }
+
+        .menu-icon .line {
+            width: 18px;
+            height: 2px;
+            background: #888;
+            transition: all 0.3s;
+            position: absolute;
+        }
+
+        .menu-icon .line:nth-child(1) {
+            transform: translateY(-4px);
+        }
+
+        .menu-icon .line:nth-child(2) {
+            transform: translateY(4px);
+        }
+
+        .menu-icon .line:nth-child(3) {
+            width: 2px;
+            height: 18px;
+            transform: translateX(-4px);
+            opacity: 0;
+        }
+
+        .menu-icon .line:nth-child(4) {
+            width: 2px;
+            height: 18px;
+            transform: translateX(4px);
+            opacity: 0;
+        }
+
+        .menu-icon.grid .line:nth-child(3),
+        .menu-icon.grid .line:nth-child(4) {
+            opacity: 1;
+        }
+
+        .menu-icon:hover .line {
+            background: #333;
+        }
+
+        /* Grid View */
+        .grid-view {
+            position: fixed;
+            inset: 0;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 400;
+            transition: opacity 0.5s, background 0.8s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #d8d8d8;
+            perspective: 1200px;
+        }
+
+        .grid-view.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .grid-scene {
+            transform-style: preserve-3d;
+            transform: rotateX(12deg) rotateY(-8deg);
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(6, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 25px;
+            transform-style: preserve-3d;
+        }
+
+        /* 3D Cube */
+        .cube-wrapper {
+            width: 100px;
+            height: 100px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .cube-wrapper:hover {
+            transform: translateZ(80px) rotateX(-5deg) rotateY(5deg);
+            z-index: 100;
+        }
+
+        .cube-wrapper.faded {
+            transform: translateZ(-50px);
+            opacity: 0.2;
+        }
+
+        .cube {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transform: translateZ(-50px);
+            transition: transform 0.5s;
+        }
+
+        .cube-face {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: 700;
+            backface-visibility: visible;
+        }
+
+        .cube-face.front {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.4) 100%);
+            transform: translateZ(50px);
+            color: rgba(255, 255, 255, 0.8);
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            box-shadow: inset 0 0 30px rgba(255, 255, 255, 0.3);
+        }
+
+        .cube-face.back {
+            background: rgba(150, 150, 150, 0.3);
+            transform: rotateY(180deg) translateZ(50px);
+        }
+
+        .cube-face.right {
+            background: linear-gradient(to left, rgba(200, 200, 200, 0.6), rgba(180, 180, 180, 0.4));
+            transform: rotateY(90deg) translateZ(50px);
+            width: 100px;
+        }
+
+        .cube-face.left {
+            background: linear-gradient(to right, rgba(160, 160, 160, 0.5), rgba(140, 140, 140, 0.3));
+            transform: rotateY(-90deg) translateZ(50px);
+            width: 100px;
+        }
+
+        .cube-face.top {
+            background: linear-gradient(to bottom, rgba(230, 230, 230, 0.7), rgba(200, 200, 200, 0.5));
+            transform: rotateX(90deg) translateZ(50px);
+            height: 100px;
+        }
+
+        .cube-face.bottom {
+            background: rgba(120, 120, 120, 0.4);
+            transform: rotateX(-90deg) translateZ(50px);
+            height: 100px;
+        }
+
+        /* Shadow under cube */
+        .cube-shadow {
+            position: absolute;
+            bottom: -60px;
+            left: 10%;
+            width: 80%;
+            height: 20px;
+            background: radial-gradient(ellipse, rgba(0, 0, 0, 0.3) 0%, transparent 70%);
+            transform: rotateX(90deg);
+            filter: blur(5px);
+        }
+
+        /* Reflection */
+        .cube-reflection {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100px;
+            height: 100px;
+            transform-style: preserve-3d;
+            transform: rotateX(180deg) translateZ(-10px);
+            opacity: 0.15;
+            filter: blur(1px);
+            pointer-events: none;
+        }
+
+        .cube-reflection .cube-face.front {
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3), transparent);
+        }
+
+        .cube-wrapper:hover .cube-face.front {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%);
+            color: rgba(0, 0, 0, 0.5);
+        }
+
+        /* Track info overlay */
+        .track-info-overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s;
+            z-index: 410;
+        }
+
+        .track-info-overlay.visible {
+            opacity: 1;
+        }
+
+        .track-info-overlay .artist {
+            font-size: 64px;
+            font-weight: 900;
+            letter-spacing: 8px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            text-shadow: 0 4px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .track-info-overlay .song {
+            font-size: 24px;
+            font-weight: 500;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            opacity: 0.7;
+        }
+
+        /* Close button */
+        .close-grid {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 40px;
+            height: 40px;
+            background: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 450;
+            font-size: 24px;
+            color: #333;
+        }
+
+        .grid-view.visible~.close-grid {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .edit-panel {
+            display: none !important;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 20px;
+            width: 240px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+            font-size: 11px;
+            z-index: 1000;
+            transition: transform 0.3s, opacity 0.3s, background 0.3s;
+        }
+
+        .edit-panel.hidden {
+            transform: translateX(-280px);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .edit-panel.dark-theme {
+            background: rgba(30, 30, 30, 0.95);
+        }
+
+        .edit-panel.dark-theme h3 {
+            color: #666;
+        }
+
+        .edit-panel.dark-theme label {
+            color: #888;
+        }
+
+        .edit-panel.dark-theme label span {
+            color: #ccc;
+        }
+
+        .edit-panel.dark-theme input[type="range"] {
+            background: #333;
+        }
+
+        .edit-panel.dark-theme input[type="range"]::-webkit-slider-thumb {
+            background: #fff;
+        }
+
+        .edit-panel h3 {
+            font-size: 10px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #999;
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+
+        .control-group {
+            margin-bottom: 14px;
+        }
+
+        .control-group label {
+            display: flex;
+            justify-content: space-between;
+            color: #666;
+            margin-bottom: 6px;
+        }
+
+        .control-group label span {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .control-group input[type="range"] {
+            width: 100%;
+            height: 4px;
+            -webkit-appearance: none;
+            background: #e0e0e0;
+            border-radius: 2px;
+            outline: none;
+        }
+
+        .control-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            background: #333;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .toggle-btn {
+            display: none !important;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.95);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+            z-index: 999;
+            transition: background 0.3s;
+        }
+
+        .toggle-btn.dark-theme {
+            background: rgba(30, 30, 30, 0.95);
+        }
+
+        .toggle-btn.dark-theme svg {
+            fill: #888;
+        }
+
+        .toggle-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: #666;
+        }
+
+        .toggle-btn.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .edit-panel .close-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            opacity: 0.4;
+        }
+
+        .edit-panel .close-btn:hover {
+            opacity: 1;
+        }
+
+        .edit-panel .close-btn svg {
+            width: 14px;
+            height: 14px;
+            fill: #333;
+        }
+
+        .edit-panel.dark-theme .close-btn svg {
+            fill: #888;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 10px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .reset-btn {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .edit-panel.dark-theme .reset-btn {
+            background: #333;
+            color: #999;
+        }
+
+        .save-btn {
+            background: #333;
+            color: #fff;
+        }
+
+        .edit-panel.dark-theme .save-btn {
+            background: #fff;
+            color: #333;
+        }
+
+        .save-btn.saved {
+            background: #2ecc71 !important;
+            color: #fff !important;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #333;
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 12px;
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 2000;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* Circle icon state for sphere mode */
+        .menu-icon.sphere .line {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: transparent;
+            border: 2px solid #888;
+        }
+
+        .menu-icon.sphere .line:nth-child(1),
+        .menu-icon.sphere .line:nth-child(2) {
+            transform: none;
+        }
+
+        .menu-icon.sphere .line:nth-child(2),
+        .menu-icon.sphere .line:nth-child(3),
+        .menu-icon.sphere .line:nth-child(4) {
+            opacity: 0;
+        }
+
+        .menu-icon.sphere:hover .line {
+            border-color: #333;
+        }
+
+        /* 33 icon state for godrays mode */
+        .menu-icon.godrays-mode .line {
+            display: none;
+        }
+
+        .menu-icon.godrays-mode::before {
+            content: '33';
+            font-size: 14px;
+            font-weight: 700;
+            color: #888;
+            letter-spacing: -1px;
+            transform: rotate(-90deg);
+            display: inline-block;
+        }
+
+        .menu-icon.godrays-mode:hover::before {
+            color: #333;
+        }
+
+        /* Global Mini Bar */
+        .global-mini-bar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            transform: scale(0.2);
+            transform-origin: top right;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .global-mini-bar.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .global-mini-bar .bar-segment-mini {
+            cursor: pointer;
+        }
+
+        /* Icon Sphere View */
+        .sphere-view {
+            position: fixed;
+            inset: 0;
+            background: #f5f5f5;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 400;
+            transition: opacity 0.5s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 800px;
+            cursor: grab;
+        }
+
+        .sphere-view:active {
+            cursor: grabbing;
+        }
+
+        .sphere-view.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .sphere-container {
+            position: relative;
+            width: 600px;
+            height: 600px;
+            transform-style: preserve-3d;
+            transform: rotateX(-10deg);
+        }
+
+        .icon-item {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            left: 50%;
+            top: 50%;
+            margin-left: -25px;
+            margin-top: -25px;
+            cursor: pointer;
+        }
+
+        .icon-item:hover .icon-inner {
+            transform: scale(1.5);
+            filter: brightness(2);
+        }
+
+        .icon-inner {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(80, 80, 80, 0.85);
+            transition: transform 0.3s ease, filter 0.3s ease;
+        }
+
+        .icon-inner svg {
+            width: 40px;
+            height: 40px;
+            fill: currentColor;
+        }
+
+        .sphere-glow {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(150, 150, 170, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .sphere-mode-toggle {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 28px;
+            z-index: 450;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .sphere-view.visible~.sphere-mode-toggle {
+            opacity: 0.4;
+            pointer-events: auto;
+        }
+
+        .sphere-view.visible~.sphere-mode-toggle:hover {
+            opacity: 0.7;
+        }
+
+        .mode-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mode-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: #999;
+            transition: fill 0.3s, transform 0.3s;
+        }
+
+        .mode-btn:hover svg {
+            fill: #666;
+            transform: scale(1.15);
+        }
+
+        .mode-btn.active svg {
+            fill: #444;
+        }
+
+        /* Nuclear Gallery View */
+        .nuclear-gallery {
+            position: fixed;
+            inset: 0;
+            background: #0a0a0a;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 150;
+            transition: opacity 0.5s;
+            overflow-y: auto;
+        }
+
+        .nuclear-gallery.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .nuclear-grid-container {
+            padding: 80px 40px 60px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .nuclear-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .nuclear-item {
+            position: relative;
+            aspect-ratio: 16/9;
+            overflow: hidden;
+            border-radius: 6px;
+            background: #151515;
+            cursor: pointer;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s;
+        }
+
+        .nuclear-item:hover {
+            transform: scale(1.02);
+            box-shadow: 0 15px 50px rgba(233, 30, 30, 0.15);
+            z-index: 10;
+        }
+
+        .nuclear-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s;
+        }
+
+        .nuclear-item:hover img {
+            transform: scale(1.08);
+        }
+
+        .nuclear-item::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.6) 0%, transparent 40%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .nuclear-item:hover::after {
+            opacity: 1;
+        }
+
+        .nuclear-item .item-title {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            right: 12px;
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.85);
+            text-transform: uppercase;
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity 0.3s, transform 0.3s;
+            z-index: 2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .nuclear-item:hover .item-title {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .nuclear-item.loading {
+            background: linear-gradient(90deg, #151515 25%, #1a1a1a 50%, #151515 75%);
+            background-size: 200% 100%;
+            animation: nuclearShimmer 1.5s infinite;
+        }
+
+        @keyframes nuclearShimmer {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        .nuclear-counter {
+            position: fixed;
+            bottom: 25px;
+            right: 40px;
+            font-size: 11px;
+            letter-spacing: 3px;
+            color: rgba(255, 255, 255, 0.25);
+            z-index: 160;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .nuclear-gallery.visible .nuclear-counter {
+            opacity: 1;
+        }
+
+        .nuclear-gallery.visible~.current-track {
+            opacity: 1;
+        }
+
+        .nuclear-gallery.visible~.esc-hint {
+            opacity: 0.5;
+        }
+
+        .nuclear-glow {
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(233, 30, 30, 0.06) 0%, transparent 70%);
+            pointer-events: none;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 0;
+        }
+
+        /* Nuclear Lightbox */
+        .nuclear-lightbox {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .nuclear-lightbox.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .nuclear-lightbox img {
+            max-width: 90vw;
+            max-height: 90vh;
+            object-fit: contain;
+            border-radius: 6px;
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+
+        .nuclear-lightbox.active img {
+            transform: scale(1);
+        }
+
+        .nuclear-lightbox-close {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            width: 45px;
+            height: 45px;
+            background: rgba(255, 255, 255, 0.08);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s, transform 0.3s;
+        }
+
+        .nuclear-lightbox-close:hover {
+            background: rgba(233, 30, 30, 0.25);
+            transform: rotate(90deg);
+        }
+
+        .nuclear-lightbox-close svg {
+            width: 20px;
+            height: 20px;
+            stroke: #fff;
+        }
+
+        /* Lucki Gallery View */
+        .lucki-gallery {
+            position: fixed;
+            inset: 0;
+            background: #0a0a0a;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 150;
+            transition: opacity 0.5s;
+            overflow-y: auto;
+        }
+
+        .lucki-gallery.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .lucki-grid-container {
+            padding: 80px 40px 60px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .lucki-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .lucki-item {
+            position: relative;
+            aspect-ratio: 16/9;
+            overflow: hidden;
+            border-radius: 6px;
+            background: #151515;
+            cursor: pointer;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s;
+        }
+
+        .lucki-item:hover {
+            transform: scale(1.02);
+            box-shadow: 0 15px 50px rgba(95, 39, 205, 0.2);
+            z-index: 10;
+        }
+
+        .lucki-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s;
+        }
+
+        .lucki-item:hover img {
+            transform: scale(1.08);
+        }
+
+        .lucki-item::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.6) 0%, transparent 40%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .lucki-item:hover::after {
+            opacity: 1;
+        }
+
+        .lucki-item .item-title {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            right: 12px;
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.85);
+            text-transform: uppercase;
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity 0.3s, transform 0.3s;
+            z-index: 2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .lucki-item:hover .item-title {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .lucki-item.loading {
+            background: linear-gradient(90deg, #151515 25%, #1a1a1a 50%, #151515 75%);
+            background-size: 200% 100%;
+            animation: luckiShimmer 1.5s infinite;
+        }
+
+        @keyframes luckiShimmer {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        .lucki-counter {
+            position: fixed;
+            bottom: 25px;
+            right: 40px;
+            font-size: 11px;
+            letter-spacing: 3px;
+            color: rgba(255, 255, 255, 0.25);
+            z-index: 160;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .lucki-gallery.visible .lucki-counter {
+            opacity: 1;
+        }
+
+        .lucki-glow {
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(95, 39, 205, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 0;
+        }
+
+        /* Godrays Viewer */
+        .godrays-view {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 150;
+            transition: opacity 0.5s;
+        }
+
+        .godrays-view.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .godrays-view iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Intro Animation Overlay */
+        .intro-overlay {
+            position: fixed;
+            inset: 0;
+            background: #f5f5f5;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.8s ease-out, visibility 0.8s;
+        }
+
+        .intro-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .intro-svg-container {
+            width: 80%;
+            max-width: 900px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .intro-svg {
+            width: 100%;
+            height: auto;
+            opacity: 0;
+            animation: introFadeIn 0.5s ease-out 0.2s forwards;
+        }
+
+        @keyframes introFadeIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Intro Animation Overlay -->
+    <div class="intro-overlay" id="introOverlay">
+        <div class="intro-svg-container">
+            <img src="trace-animated.svg" alt="33rd Creative" class="intro-svg">
+        </div>
+    </div>
+
+    <div class="transition-overlay" id="transitionOverlay">
+        <div class="transition-black" id="transitionBlack"></div>
+    </div>
+
+    <div class="menu-icon" id="menuIcon">
+        <div class="line"></div>
+        <div class="line"></div>
+        <div class="line"></div>
+        <div class="line"></div>
+    </div>
+
+    <div class="grid-view" id="gridView">
+        <div class="grid-scene">
+            <div class="grid-container" id="gridContainer"></div>
+        </div>
+    </div>
+
+    <div class="track-info-overlay" id="trackInfoOverlay">
+        <div class="artist" id="overlayArtist"></div>
+        <div class="song" id="overlaySong"></div>
+    </div>
+
+    <button class="close-grid" id="closeGrid">×</button>
+
+    <!-- Icon Sphere View -->
+    <div class="sphere-view" id="sphereView">
+        <div class="sphere-glow"></div>
+        <div class="sphere-container" id="sphereContainer">
+            <!-- Icons will be added by JS -->
+        </div>
+    </div>
+
+    <div class="sphere-mode-toggle">
+        <button class="mode-btn" id="sphereModeBtn" title="Sphere Mode">
+            <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2" />
+                <ellipse cx="12" cy="12" rx="10" ry="4" fill="none" stroke="currentColor" stroke-width="1.5" />
+                <line x1="12" y1="2" x2="12" y2="22" stroke="currentColor" stroke-width="1.5" />
+            </svg>
+        </button>
+        <button class="mode-btn active" id="ringsModeBtn" title="Rings Mode">
+            <svg viewBox="0 0 24 24">
+                <ellipse cx="12" cy="12" rx="10" ry="4" fill="none" stroke="currentColor" stroke-width="2" />
+                <ellipse cx="12" cy="12" rx="10" ry="4" fill="none" stroke="currentColor" stroke-width="2"
+                    transform="rotate(90 12 12)" />
+            </svg>
+        </button>
+    </div>
+
+    <div class="main-content" id="mainContent">
+        <div class="container">
+            <div class="gradient-bar" id="gradientBar">
+                <div class="bar-segment" data-index="0" data-track="0" data-color="#e91e1e">
+                    <div class="texture"></div>
+                </div>
+                <div class="bar-segment" data-index="1" data-track="1" data-color="#4ecdc4">
+                    <div class="texture"></div>
+                </div>
+                <div class="bar-segment" data-index="2" data-track="2" data-color="#667eea">
+                    <div class="texture"></div>
+                </div>
+                <div class="bar-segment" data-index="3" data-track="3" data-color="#764ba2">
+                    <div class="texture"></div>
+                </div>
+                <div class="bar-segment" data-index="4" data-track="4" data-color="#e91e9c">
+                    <div class="texture"></div>
+                </div>
+                <div class="bar-segment" data-index="5" data-track="5" data-color="#ff9f43">
+                    <div class="texture"></div>
+                </div>
+                <div class="bar-segment" data-index="6" data-track="6" data-color="#1dd1a1">
+                    <div class="texture"></div>
+                </div>
+                <div class="bar-segment" data-index="7" data-track="7" data-color="#5f27cd">
+                    <div class="texture"></div>
+                </div>
+                <div class="bar-segment" data-index="8" data-track="8" data-color="#00d2d3">
+                    <div class="texture"></div>
+                </div>
+                <div class="bar-segment" data-index="9" data-track="9" data-color="#ff6b81">
+                    <div class="texture"></div>
+                </div>
+                <div class="bar-segment" data-index="10" data-track="10" data-color="#7bed9f">
+                    <div class="texture"></div>
+                </div>
+                <div class="bar-segment" data-index="11" data-track="11" data-color="#a55eea">
+                    <div class="texture"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="social-icons">
+            <svg viewBox="0 0 24 24">
+                <path
+                    d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm6.93 6h-2.95c-.32-1.25-.78-2.45-1.38-3.56 1.84.63 3.37 1.91 4.33 3.56zM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82c.43-1.43 1.08-2.76 1.91-3.96zM4.26 14C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2 0 .68.06 1.34.14 2H4.26zm.82 2h2.95c.32 1.25.78 2.45 1.38 3.56-1.84-.63-3.37-1.9-4.33-3.56zm2.95-8H5.08c.96-1.66 2.49-2.93 4.33-3.56C8.81 5.55 8.35 6.75 8.03 8zM12 19.96c-.83-1.2-1.48-2.53-1.91-3.96h3.82c-.43 1.43-1.08 2.76-1.91 3.96zM14.34 14H9.66c-.09-.66-.16-1.32-.16-2 0-.68.07-1.35.16-2h4.68c.09.65.16 1.32.16 2 0 .68-.07 1.34-.16 2zm.25 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95c-.96 1.65-2.49 2.93-4.33 3.56zM16.36 14c.08-.66.14-1.32.14-2 0-.68-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2h-3.38z" />
+            </svg>
+            <svg viewBox="0 0 24 24">
+                <path
+                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-5.5c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z" />
+            </svg>
+            <svg viewBox="0 0 24 24">
+                <path
+                    d="M12 2.04C6.5 2.04 2 6.53 2 12.06C2 17.06 5.66 21.21 10.44 21.96V14.96H7.9V12.06H10.44V9.85C10.44 7.34 11.93 5.96 14.22 5.96C15.31 5.96 16.45 6.15 16.45 6.15V8.62H15.19C13.95 8.62 13.56 9.39 13.56 10.18V12.06H16.34L15.89 14.96H13.56V21.96A10 10 0 0 0 22 12.06C22 6.53 17.5 2.04 12 2.04Z" />
+            </svg>
+            <svg viewBox="0 0 24 24">
+                <path
+                    d="M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.38-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29 0 .34.04.67.11.98C8.28 9.09 5.11 7.38 3 4.79c-.37.63-.58 1.37-.58 2.15 0 1.49.75 2.81 1.91 3.56-.71 0-1.37-.2-1.95-.5v.03c0 2.08 1.48 3.82 3.44 4.21a4.22 4.22 0 0 1-1.93.07 4.28 4.28 0 0 0 4 2.98 8.521 8.521 0 0 1-5.33 1.84c-.34 0-.68-.02-1.02-.06C3.44 20.29 5.7 21 8.12 21 16 21 20.33 14.46 20.33 8.79c0-.19 0-.37-.01-.56.84-.6 1.56-1.36 2.14-2.23z" />
+            </svg>
+            <svg viewBox="0 0 24 24">
+                <path
+                    d="M7.8 2H16.2C19.4 2 22 4.6 22 7.8V16.2A5.8 5.8 0 0 1 16.2 22H7.8C4.6 22 2 19.4 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2M7.6 4A3.6 3.6 0 0 0 4 7.6V16.4C4 18.39 5.61 20 7.6 20H16.4A3.6 3.6 0 0 0 20 16.4V7.6C20 5.61 18.39 4 16.4 4H7.6M17.25 5.5A1.25 1.25 0 0 1 18.5 6.75A1.25 1.25 0 0 1 17.25 8A1.25 1.25 0 0 1 16 6.75A1.25 1.25 0 0 1 17.25 5.5M12 7A5 5 0 0 1 17 12A5 5 0 0 1 12 17A5 5 0 0 1 7 12A5 5 0 0 1 12 7M12 9A3 3 0 0 0 9 12A3 3 0 0 0 12 15A3 3 0 0 0 15 12A3 3 0 0 0 12 9Z" />
+            </svg>
+            <svg viewBox="0 0 24 24">
+                <path
+                    d="M10 15l5.19-3L10 9v6m11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 2.19-.16 3.8-.44 4.83-.25.9-.83 1.48-1.73 1.73-.47.13-1.33.22-2.65.28-1.3.07-2.49.1-3.59.1L12 19c-4.19 0-6.8-.16-7.83-.44-.9-.25-1.48-.83-1.73-1.73-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L2 12c0-2.19.16-3.8.44-4.83.25-.9.83-1.48 1.73-1.73.47-.13 1.33-.22 2.65-.28 1.3-.07 2.49-.1 3.59-.1L12 5c4.19 0 6.8.16 7.83.44.9.25 1.48.83 1.73 1.73z" />
+            </svg>
+        </div>
+    </div>
+
+    <div class="dark-content" id="darkContent">
+    </div>
+
+    <!-- Global Mini Bar (visible above everything) -->
+    <div class="global-mini-bar" id="globalMiniBar">
+        <div class="gradient-bar-mini" id="gradientBarMini">
+            <div class="bar-segment-mini" data-index="0" data-track="0" data-color="#e91e1e"></div>
+            <div class="bar-segment-mini" data-index="1" data-track="1" data-color="#4ecdc4"></div>
+            <div class="bar-segment-mini" data-index="2" data-track="2" data-color="#667eea"></div>
+            <div class="bar-segment-mini" data-index="3" data-track="3" data-color="#764ba2"></div>
+            <div class="bar-segment-mini" data-index="4" data-track="4" data-color="#e91e9c"></div>
+            <div class="bar-segment-mini" data-index="5" data-track="5" data-color="#ff9f43"></div>
+            <div class="bar-segment-mini" data-index="6" data-track="6" data-color="#1dd1a1"></div>
+            <div class="bar-segment-mini" data-index="7" data-track="7" data-color="#5f27cd"></div>
+            <div class="bar-segment-mini" data-index="8" data-track="8" data-color="#00d2d3"></div>
+            <div class="bar-segment-mini" data-index="9" data-track="9" data-color="#ff6b81"></div>
+            <div class="bar-segment-mini" data-index="10" data-track="10" data-color="#7bed9f"></div>
+            <div class="bar-segment-mini" data-index="11" data-track="11" data-color="#a55eea"></div>
+        </div>
+    </div>
+
+    <!-- Nuclear Gallery -->
+    <div class="nuclear-gallery" id="nuclearGallery">
+        <div class="nuclear-glow"></div>
+        <div class="nuclear-grid-container">
+            <div class="nuclear-grid" id="nuclearGrid">
+                <!-- Images loaded by JS -->
+            </div>
+        </div>
+        <div class="nuclear-counter" id="nuclearCounter"></div>
+    </div>
+
+    <!-- Lucki Gallery -->
+    <div class="lucki-gallery" id="luckiGallery">
+        <div class="lucki-glow"></div>
+        <div class="lucki-grid-container">
+            <div class="lucki-grid" id="luckiGrid">
+                <!-- Images loaded by JS -->
+            </div>
+        </div>
+        <div class="lucki-counter" id="luckiCounter"></div>
+    </div>
+
+    <!-- Godrays Viewer -->
+    <div class="godrays-view" id="godraysView">
+        <iframe id="godraysFrame" src=""></iframe>
+    </div>
+
+    <!-- Nuclear Lightbox -->
+    <div class="nuclear-lightbox" id="nuclearLightbox">
+        <button class="nuclear-lightbox-close" id="nuclearLightboxClose">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round">
+                <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+        </button>
+        <img src="" alt="" id="nuclearLightboxImg">
+    </div>
+
+    <div class="orb" id="orb"></div>
+    <div class="current-track" id="currentTrack"></div>
+    <div class="esc-hint">ESC to exit</div>
+
+    <button class="toggle-btn" id="toggleBtn">
+        <svg viewBox="0 0 24 24">
+            <path
+                d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z" />
+        </svg>
+    </button>
+
+    <div class="edit-panel hidden" id="editPanel">
+        <button class="close-btn" id="closeBtn">
+            <svg viewBox="0 0 24 24">
+                <path
+                    d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+            </svg>
+        </button>
+        <h3>Animation Settings</h3>
+
+        <div class="control-group">
+            <label>Expand Size <span id="expandSizeVal">250</span>px</label>
+            <input type="range" id="expandSize" min="150" max="350" value="250">
+        </div>
+        <div class="control-group">
+            <label>Base Height <span id="baseHeightVal">230</span>px</label>
+            <input type="range" id="baseHeight" min="100" max="300" value="230">
+        </div>
+        <div class="control-group">
+            <label>Min Height <span id="minHeightVal">60</span>px</label>
+            <input type="range" id="minHeight" min="20" max="150" value="60">
+        </div>
+        <div class="control-group">
+            <label>Falloff <span id="falloffVal">30</span>px</label>
+            <input type="range" id="falloff" min="5" max="60" value="30">
+        </div>
+        <div class="control-group">
+            <label>Smoothing <span id="smoothingVal">0.12</span></label>
+            <input type="range" id="smoothing" min="1" max="30" value="12">
+        </div>
+        <div class="control-group">
+            <label>Bar Width <span id="barWidthVal">44</span>px</label>
+            <input type="range" id="barWidth" min="20" max="80" value="44">
+        </div>
+        <div class="control-group">
+            <label>Color Blend <span id="colorBlendVal">0.12</span></label>
+            <input type="range" id="colorBlend" min="1" max="30" value="12">
+        </div>
+
+        <div class="btn-row">
+            <button class="btn reset-btn" id="resetBtn">Reset</button>
+            <button class="btn save-btn" id="saveBtn">Save</button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">Settings saved!</div>
+
+    <script>
+        const segments = document.querySelectorAll('#gradientBar .bar-segment');
+        const segmentsMini = document.querySelectorAll('#gradientBarMini .bar-segment-mini');
+        const gradientBar = document.getElementById('gradientBar');
+        const gradientBarMini = document.getElementById('gradientBarMini');
+        const mainContent = document.getElementById('mainContent');
+        const darkContent = document.getElementById('darkContent');
+        const transitionBlack = document.getElementById('transitionBlack');
+        const orb = document.getElementById('orb');
+        const currentTrackLabel = document.getElementById('currentTrack');
+        const toast = document.getElementById('toast');
+        const editPanel = document.getElementById('editPanel');
+        const toggleBtn = document.getElementById('toggleBtn');
+        const menuIcon = document.getElementById('menuIcon');
+        const gridView = document.getElementById('gridView');
+        const gridContainer = document.getElementById('gridContainer');
+        const closeGrid = document.getElementById('closeGrid');
+        const trackInfoOverlay = document.getElementById('trackInfoOverlay');
+        const overlayArtist = document.getElementById('overlayArtist');
+        const overlaySong = document.getElementById('overlaySong');
+        const sphereView = document.getElementById('sphereView');
+        const sphereContainer = document.getElementById('sphereContainer');
+        const sphereModeBtn = document.getElementById('sphereModeBtn');
+        const ringsModeBtn = document.getElementById('ringsModeBtn');
+        const globalMiniBar = document.getElementById('globalMiniBar');
+
+        const totalSegments = 12;
+        const trackNames = ['NUCLEAR', 'WAVES', 'DRIFT', '33', 'WANT IT', 'ECHOES', 'PULSE', 'LUCKI', 'FLUX', 'HAZE', 'BLOOM', 'STATIC'];
+        const artistNames = ['SANNHET', 'FLYING LOTUS', 'TYCHO', 'BONOBO', 'MASSIVE ATTACK', 'BOARDS OF CANADA', 'APHEX TWIN', 'BURIAL', 'FOUR TET', 'CARIBOU', 'MODERAT', 'AMON TOBIN'];
+
+        const grayColors = ['#c8c8c8', '#bcbcbc', '#afafaf', '#a2a2a2', '#959595', '#888888', '#7a7a7a', '#6d6d6d', '#5f5f5f', '#525252', '#3d3d3d', '#282828'];
+
+        // Distinct colors across the spectrum for hover effect - each column has unique color
+        const hoverColors = ['#e91e1e', '#4ecdc4', '#667eea', '#764ba2', '#e91e9c', '#ff9f43', '#1dd1a1', '#5f27cd', '#00d2d3', '#ff6b81', '#7bed9f', '#a55eea'];
+
+        const trackColors = ['#e91e1e', '#4ecdc4', '#667eea', '#764ba2', '#e91e9c', '#ff9f43', '#1dd1a1', '#5f27cd', '#00d2d3', '#ff6b81', '#7bed9f', '#a55eea'];
+
+        // Create 3D cubes
+        const cubeData = [];
+        for (let i = 1; i <= 18; i++) {
+            cubeData.push({ num: String(i).padStart(2, '0'), track: (i - 1) % 5 });
+        }
+
+        cubeData.forEach(data => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'cube-wrapper';
+            wrapper.dataset.track = data.track;
+            wrapper.dataset.color = trackColors[data.track];
+            wrapper.dataset.artist = artistNames[data.track];
+            wrapper.dataset.song = trackNames[data.track];
+
+            wrapper.innerHTML = `
+                <div class="cube">
+                    <div class="cube-face front"></div>
+                    <div class="cube-face back"></div>
+                    <div class="cube-face right"></div>
+                    <div class="cube-face left"></div>
+                    <div class="cube-face top"></div>
+                    <div class="cube-face bottom"></div>
+                </div>
+                <div class="cube-shadow"></div>
+            `;
+            gridContainer.appendChild(wrapper);
+        });
+
+        const cubeWrappers = document.querySelectorAll('.cube-wrapper');
+
+        const defaults = { expandSize: 250, baseHeight: 230, minHeight: 60, falloff: 30, smoothing: 0.12, barWidth: 44, colorBlend: 0.12 };
+
+        let params = { ...defaults };
+        const saved = localStorage.getItem('prologueEpSettings9');
+        if (saved) { try { params = { ...defaults, ...JSON.parse(saved) }; } catch (e) { } }
+
+        let activeTrack = null;
+        let hoveredIndex = -1;
+        let hoveredIndexMini = -1;
+        let isDarkMode = false;
+        let isGridMode = false;
+        let isSphereMode = false;
+        let isNuclearMode = false;
+        let isLuckiMode = false;
+        let isGodraysMode = false;
+        let isTransitioning = false;
+        let menuState = 0; // 0 = lines, 1 = grid, 2 = sphere, 3 = godrays/33
+
+        const currentWidths = new Array(totalSegments).fill(params.barWidth);
+        const currentHeights = new Array(totalSegments).fill(params.baseHeight);
+        const targetWidths = new Array(totalSegments).fill(params.barWidth);
+        const targetHeights = new Array(totalSegments).fill(params.baseHeight);
+
+        const currentWidthsMini = new Array(totalSegments).fill(params.barWidth);
+        const currentHeightsMini = new Array(totalSegments).fill(params.baseHeight);
+        const targetWidthsMini = new Array(totalSegments).fill(params.barWidth);
+        const targetHeightsMini = new Array(totalSegments).fill(params.baseHeight);
+
+        function initSegments() {
+            segments.forEach((seg, i) => {
+                seg.style.background = grayColors[i];
+                seg.style.height = params.baseHeight + 'px';
+                seg.style.width = params.barWidth + 'px';
+            });
+            segmentsMini.forEach((seg, i) => {
+                seg.style.background = grayColors[i];
+                seg.style.height = params.baseHeight + 'px';
+                seg.style.width = params.barWidth + 'px';
+            });
+        }
+
+        initSegments();
+
+        function blendColors(c1, c2, r) {
+            const h = c => parseInt(c, 16);
+            const r1 = h(c1.slice(1, 3)), g1 = h(c1.slice(3, 5)), b1 = h(c1.slice(5, 7));
+            const r2 = h(c2.slice(1, 3)), g2 = h(c2.slice(3, 5)), b2 = h(c2.slice(5, 7));
+            return `rgb(${Math.round(r1 + (r2 - r1) * r)},${Math.round(g1 + (g2 - g1) * r)},${Math.round(b1 + (b2 - b1) * r)})`;
+        }
+
+        function hexToRgba(hex, alpha) {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return `rgba(${r},${g},${b},${alpha})`;
+        }
+
+        function animate() {
+            if (!isDarkMode && !isGridMode) {
+                for (let i = 0; i < totalSegments; i++) {
+                    if (hoveredIndex === -1) {
+                        targetWidths[i] = params.barWidth;
+                        targetHeights[i] = params.baseHeight;
+                    } else if (i === hoveredIndex) {
+                        targetWidths[i] = params.expandSize;
+                        targetHeights[i] = params.expandSize;
+                    } else {
+                        targetWidths[i] = params.barWidth;
+                        const d = Math.abs(i - hoveredIndex);
+                        targetHeights[i] = Math.max(params.minHeight, params.expandSize - (d * params.falloff));
+                    }
+                }
+
+                segments.forEach((seg, i) => {
+                    currentWidths[i] += (targetWidths[i] - currentWidths[i]) * params.smoothing;
+                    currentHeights[i] += (targetHeights[i] - currentHeights[i]) * params.smoothing;
+                    seg.style.width = currentWidths[i] + 'px';
+                    seg.style.height = currentHeights[i] + 'px';
+                    seg.classList.toggle('expanded', currentWidths[i] > params.barWidth + 50);
+
+                    if (hoveredIndex !== -1) {
+                        const d = Math.abs(i - hoveredIndex);
+                        const blend = Math.max(0, 1 - (d * params.colorBlend));
+                        seg.style.background = blendColors(grayColors[i], hoverColors[i], blend);
+                    } else {
+                        seg.style.background = grayColors[i];
+                    }
+                });
+            }
+
+            for (let i = 0; i < totalSegments; i++) {
+                if (hoveredIndexMini === -1) {
+                    targetWidthsMini[i] = params.barWidth;
+                    targetHeightsMini[i] = params.baseHeight;
+                } else if (i === hoveredIndexMini) {
+                    targetWidthsMini[i] = params.expandSize;
+                    targetHeightsMini[i] = params.expandSize;
+                } else {
+                    targetWidthsMini[i] = params.barWidth;
+                    const d = Math.abs(i - hoveredIndexMini);
+                    targetHeightsMini[i] = Math.max(params.minHeight, params.expandSize - (d * params.falloff));
+                }
+            }
+
+            segmentsMini.forEach((seg, i) => {
+                currentWidthsMini[i] += (targetWidthsMini[i] - currentWidthsMini[i]) * params.smoothing;
+                currentHeightsMini[i] += (targetHeightsMini[i] - currentHeightsMini[i]) * params.smoothing;
+                seg.style.width = currentWidthsMini[i] + 'px';
+                seg.style.height = currentHeightsMini[i] + 'px';
+                seg.classList.toggle('expanded', currentWidthsMini[i] > params.barWidth + 50);
+
+                if (hoveredIndexMini !== -1) {
+                    const d = Math.abs(i - hoveredIndexMini);
+                    const blend = Math.max(0, 1 - (d * params.colorBlend));
+                    seg.style.background = blendColors(grayColors[i], hoverColors[i], blend);
+                } else {
+                    seg.style.background = grayColors[i];
+                }
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        segments.forEach((seg, i) => {
+            seg.addEventListener('mouseenter', () => {
+                if (isTransitioning || isDarkMode || isGridMode) return;
+                hoveredIndex = i;
+                const t = parseInt(seg.dataset.track);
+                activeTrack = t;
+                orb.style.background = seg.dataset.color;
+                currentTrackLabel.textContent = trackNames[t];
+                currentTrackLabel.style.color = seg.dataset.color;
+            });
+        });
+
+        gradientBar.addEventListener('mouseleave', () => {
+            if (isTransitioning || isDarkMode || isGridMode) return;
+            hoveredIndex = -1;
+            activeTrack = null;
+        });
+
+        gradientBar.addEventListener('click', () => {
+            if (activeTrack !== null && !isTransitioning && !isDarkMode && !isGridMode) {
+                if (activeTrack === 0) {
+                    // NUCLEAR track - show nuclear gallery
+                    enterNuclearMode();
+                } else if (activeTrack === 3) {
+                    // 33 track - show godrays viewer
+                    enterGodraysMode();
+                } else if (activeTrack === 7) {
+                    // LUCKI track - show lucki gallery
+                    enterLuckiMode();
+                } else {
+                    enterDarkMode();
+                }
+            }
+        });
+
+        segmentsMini.forEach((seg, i) => {
+            seg.addEventListener('mouseenter', () => {
+                if (isTransitioning) return;
+                hoveredIndexMini = i;
+                const t = parseInt(seg.dataset.track);
+                activeTrack = t;
+                orb.style.background = seg.dataset.color;
+                currentTrackLabel.textContent = trackNames[t];
+                currentTrackLabel.style.color = seg.dataset.color;
+            });
+        });
+
+        gradientBarMini.addEventListener('mouseleave', () => {
+            if (isTransitioning) return;
+            hoveredIndexMini = -1;
+        });
+
+        gradientBarMini.addEventListener('click', () => {
+            if (!isTransitioning && isDarkMode) {
+                exitDarkMode();
+            }
+        });
+
+        menuIcon.addEventListener('click', () => {
+            if (isTransitioning || isDarkMode) return;
+
+            // Cycle through states: 0 (lines) -> 1 (grid) -> 2 (sphere) -> 3 (godrays/33) -> 0 (lines)
+            if (menuState === 0) {
+                openGridView();
+                menuState = 1;
+            } else if (menuState === 1) {
+                closeGridView();
+                openSphereView();
+                menuState = 2;
+            } else if (menuState === 2) {
+                closeSphereView();
+                openGodraysView();
+                menuState = 3;
+            } else {
+                closeGodraysView();
+                menuState = 0;
+            }
+        });
+
+        closeGrid.addEventListener('click', () => {
+            if (!isTransitioning && isGridMode) {
+                closeGridView();
+                menuState = 0;
+            }
+        });
+
+        function openGridView() {
+            isGridMode = true;
+            menuIcon.classList.remove('sphere');
+            menuIcon.classList.add('grid');
+            gridView.classList.add('visible');
+            mainContent.style.opacity = '0';
+            mainContent.style.pointerEvents = 'none';
+        }
+
+        function closeGridView() {
+            isGridMode = false;
+            menuIcon.classList.remove('grid');
+            gridView.classList.remove('visible');
+            gridView.style.background = '#d8d8d8';
+            trackInfoOverlay.classList.remove('visible');
+            mainContent.style.opacity = '1';
+            mainContent.style.pointerEvents = 'auto';
+            cubeWrappers.forEach(c => c.classList.remove('faded'));
+        }
+
+        function openSphereView() {
+            isSphereMode = true;
+            menuIcon.classList.add('sphere');
+            sphereView.classList.add('visible');
+            mainContent.style.opacity = '0';
+            mainContent.style.pointerEvents = 'none';
+            initSphereAnimation();
+        }
+
+        function closeSphereView() {
+            isSphereMode = false;
+            menuIcon.classList.remove('sphere');
+            sphereView.classList.remove('visible');
+            mainContent.style.opacity = '1';
+            mainContent.style.pointerEvents = 'auto';
+            stopSphereAnimation();
+        }
+
+        function openGodraysView() {
+            isGodraysMode = true;
+            menuIcon.classList.add('godrays-mode');
+            godraysView.classList.add('visible');
+            godraysFrame.src = 'godrays-viewer.html?model=33.glb';
+            mainContent.style.opacity = '0';
+            mainContent.style.pointerEvents = 'none';
+        }
+
+        function closeGodraysView() {
+            isGodraysMode = false;
+            menuIcon.classList.remove('godrays-mode');
+            godraysView.classList.remove('visible');
+            godraysFrame.src = '';
+            mainContent.style.opacity = '1';
+            mainContent.style.pointerEvents = 'auto';
+        }
+
+        cubeWrappers.forEach(cube => {
+            cube.addEventListener('mouseenter', () => {
+                if (!isGridMode) return;
+
+                const color = cube.dataset.color;
+                const artist = cube.dataset.artist;
+                const song = cube.dataset.song;
+
+                cubeWrappers.forEach(other => {
+                    if (other !== cube) other.classList.add('faded');
+                });
+
+                gridView.style.background = hexToRgba(color, 0.5);
+
+                overlayArtist.textContent = artist;
+                overlayArtist.style.color = color;
+                overlaySong.textContent = song;
+                overlaySong.style.color = color;
+                trackInfoOverlay.classList.add('visible');
+            });
+
+            cube.addEventListener('mouseleave', () => {
+                cubeWrappers.forEach(c => c.classList.remove('faded'));
+                gridView.style.background = '#d8d8d8';
+                trackInfoOverlay.classList.remove('visible');
+            });
+        });
+
+        function enterDarkMode() {
+            isTransitioning = true;
+            gradientBar.classList.add('squishing');
+
+            setTimeout(() => {
+                transitionBlack.style.transition = 'height 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+                transitionBlack.style.height = '100vh';
+            }, 400);
+
+            setTimeout(() => {
+                isDarkMode = true;
+                mainContent.classList.add('hidden');
+                darkContent.classList.add('visible');
+                editPanel.classList.add('dark-theme');
+                toggleBtn.classList.add('dark-theme');
+                menuIcon.style.opacity = '0';
+                gradientBar.classList.remove('squishing');
+                hoveredIndex = -1;
+
+                setTimeout(() => {
+                    transitionBlack.style.height = '0';
+                    isTransitioning = false;
+                }, 100);
+            }, 900);
+        }
+
+        function exitDarkMode() {
+            isTransitioning = true;
+            transitionBlack.style.transition = 'height 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+            transitionBlack.style.height = '100vh';
+
+            setTimeout(() => {
+                isDarkMode = false;
+                darkContent.classList.remove('visible');
+                mainContent.classList.remove('hidden');
+                editPanel.classList.remove('dark-theme');
+                toggleBtn.classList.remove('dark-theme');
+                menuIcon.style.opacity = '1';
+                hoveredIndexMini = -1;
+                activeTrack = null;
+            }, 500);
+
+            setTimeout(() => {
+                transitionBlack.style.height = '0';
+            }, 600);
+
+            setTimeout(() => {
+                isTransitioning = false;
+            }, 1100);
+        }
+
+        document.addEventListener('mousemove', (e) => {
+            orb.style.left = (e.clientX - 60) + 'px';
+            orb.style.top = (e.clientY - 60) + 'px';
+        });
+
+
+        const closeBtn = document.getElementById('closeBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const saveBtn = document.getElementById('saveBtn');
+
+        const sliders = {
+            expandSize: { el: document.getElementById('expandSize'), val: document.getElementById('expandSizeVal') },
+            baseHeight: { el: document.getElementById('baseHeight'), val: document.getElementById('baseHeightVal') },
+            minHeight: { el: document.getElementById('minHeight'), val: document.getElementById('minHeightVal') },
+            falloff: { el: document.getElementById('falloff'), val: document.getElementById('falloffVal') },
+            smoothing: { el: document.getElementById('smoothing'), val: document.getElementById('smoothingVal'), divisor: 100 },
+            barWidth: { el: document.getElementById('barWidth'), val: document.getElementById('barWidthVal') },
+            colorBlend: { el: document.getElementById('colorBlend'), val: document.getElementById('colorBlendVal'), divisor: 100 }
+        };
+
+        function updateUI() {
+            Object.keys(sliders).forEach(k => {
+                const s = sliders[k];
+                if (s.divisor) { s.el.value = params[k] * s.divisor; s.val.textContent = params[k].toFixed(2); }
+                else { s.el.value = params[k]; s.val.textContent = params[k]; }
+            });
+        }
+
+        updateUI();
+
+        toggleBtn.addEventListener('click', (e) => { e.stopPropagation(); editPanel.classList.remove('hidden'); toggleBtn.classList.add('hidden'); });
+        closeBtn.addEventListener('click', () => { editPanel.classList.add('hidden'); toggleBtn.classList.remove('hidden'); });
+
+        Object.keys(sliders).forEach(k => {
+            sliders[k].el.addEventListener('input', () => {
+                let v = parseFloat(sliders[k].el.value);
+                if (sliders[k].divisor) { v /= sliders[k].divisor; sliders[k].val.textContent = v.toFixed(2); }
+                else sliders[k].val.textContent = v;
+                params[k] = v;
+            });
+        });
+
+        resetBtn.addEventListener('click', () => { params = { ...defaults }; updateUI(); });
+
+        saveBtn.addEventListener('click', () => {
+            localStorage.setItem('prologueEpSettings9', JSON.stringify(params));
+            saveBtn.textContent = 'Saved!';
+            saveBtn.classList.add('saved');
+            toast.classList.add('show');
+            setTimeout(() => { saveBtn.textContent = 'Save'; saveBtn.classList.remove('saved'); toast.classList.remove('show'); }, 1500);
+        });
+
+        // ========== GODRAYS VIEWER ==========
+        const godraysView = document.getElementById('godraysView');
+        const godraysFrame = document.getElementById('godraysFrame');
+
+        function enterGodraysMode() {
+            isTransitioning = true;
+            gradientBar.classList.add('squishing');
+            setTimeout(() => {
+                transitionBlack.style.transition = 'height 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+                transitionBlack.style.height = '100vh';
+            }, 400);
+            setTimeout(() => {
+                isGodraysMode = true;
+                mainContent.classList.add('hidden');
+                godraysView.classList.add('visible');
+                godraysFrame.src = 'godrays-viewer.html?model=33.glb';
+                globalMiniBar.classList.add('visible');
+                editPanel.classList.add('dark-theme');
+                toggleBtn.classList.add('dark-theme');
+                menuIcon.style.opacity = '0';
+                gradientBar.classList.remove('squishing');
+                hoveredIndex = -1;
+                setTimeout(() => {
+                    transitionBlack.style.height = '0';
+                    isTransitioning = false;
+                }, 100);
+            }, 900);
+        }
+
+        function exitGodraysMode() {
+            isTransitioning = true;
+            transitionBlack.style.transition = 'height 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+            transitionBlack.style.height = '100vh';
+            setTimeout(() => {
+                isGodraysMode = false;
+                godraysView.classList.remove('visible');
+                godraysFrame.src = '';
+                globalMiniBar.classList.remove('visible');
+                mainContent.classList.remove('hidden');
+                editPanel.classList.remove('dark-theme');
+                toggleBtn.classList.remove('dark-theme');
+                menuIcon.style.opacity = '1';
+                activeTrack = null;
+            }, 500);
+            setTimeout(() => { transitionBlack.style.height = '0'; }, 600);
+            setTimeout(() => { isTransitioning = false; }, 1100);
+        }
+
+        // ========== NUCLEAR GALLERY ==========
+        const nuclearGallery = document.getElementById('nuclearGallery');
+        const nuclearGrid = document.getElementById('nuclearGrid');
+        const nuclearCounter = document.getElementById('nuclearCounter');
+        const nuclearLightbox = document.getElementById('nuclearLightbox');
+        const nuclearLightboxImg = document.getElementById('nuclearLightboxImg');
+        const nuclearLightboxClose = document.getElementById('nuclearLightboxClose');
+
+        const nuclearImages = [
+            'nuclear flame.gif',
+            'nuclear pit.gif',
+            'Untitled video - Made with Clipchamp (14).gif',
+            'Untitled video - Made with Clipchamp (16).gif',
+            'Untitled video - Made with Clipchamp (165).gif',
+            'Untitled video - Made with Clipchamp (17).gif',
+            'Untitled video - Made with Clipchamp (19).gif',
+            'Untitled video - Made with Clipchamp (20).gif',
+            'Untitled video - Made with Clipchamp (21).gif',
+            'Untitled video - Made with Clipchamp (22).gif',
+            'Untitled video - Made with Clipchamp (23).gif',
+            'Untitled video - Made with Clipchamp (25).gif',
+            'Untitled video - Made with Clipchamp (26).gif',
+            'Untitled video - Made with Clipchamp (30).gif',
+            'Untitled video - Made with Clipchamp (518).gif',
+            'Untitled video - Made with Clipchamp (6).gif'
+        ];
+
+        function initNuclearGrid() {
+            nuclearCounter.textContent = `${nuclearImages.length} ITEMS`;
+            nuclearImages.forEach((filename) => {
+                const item = document.createElement('div');
+                item.className = 'nuclear-item loading';
+                let displayName = filename.replace('.gif', '').replace('Untitled video - Made with Clipchamp ', 'Clip ');
+                item.innerHTML = `<img src="nuclear/${encodeURIComponent(filename)}" alt="${displayName}" loading="lazy"><span class="item-title">${displayName}</span>`;
+                const img = item.querySelector('img');
+                img.onload = () => item.classList.remove('loading');
+                img.onerror = () => { item.style.display = 'none'; };
+                item.addEventListener('click', () => {
+                    nuclearLightboxImg.src = `nuclear/${encodeURIComponent(filename)}`;
+                    nuclearLightbox.classList.add('active');
+                });
+                nuclearGrid.appendChild(item);
+            });
+        }
+        initNuclearGrid();
+
+        // ========== LUCKI GALLERY ==========
+        const luckiGallery = document.getElementById('luckiGallery');
+        const luckiGrid = document.getElementById('luckiGrid');
+        const luckiCounter = document.getElementById('luckiCounter');
+
+        const luckiImages = [
+            'Recording 2025-04-10 183355.gif',
+            'Recording 2025-04-11 013513.gif',
+            'Recording 2025-04-11 0137513.gif',
+            'Recording 2025-04-e11 013513.gif',
+            'Recording 72025-04-11 013513.gif',
+            'Untitled video - Made with Clipchamp (38).gif',
+            'Untitled video - Made with Clipchamp (39).gif',
+            'Untitled video - Made with Clipchamp (40).gif',
+            'Untitled video - Made with Clipchamp (41).gif',
+            'Untitled video - Made with Clipchamp (42).gif',
+            'Untitled video - Made with Clipchamp (44).gif',
+            'Untitled video - Made with Clipchamp (45).gif',
+            'Untitled video - Made with Clipchamp (46).gif'
+        ];
+
+        function initLuckiGrid() {
+            luckiCounter.textContent = `${luckiImages.length} ITEMS`;
+            luckiImages.forEach((filename) => {
+                const item = document.createElement('div');
+                item.className = 'lucki-item loading';
+                let displayName = filename.replace('.gif', '').replace('Untitled video - Made with Clipchamp ', 'Clip ').replace('Recording ', 'Rec ');
+                item.innerHTML = `<img src="lucki/${encodeURIComponent(filename)}" alt="${displayName}" loading="lazy"><span class="item-title">${displayName}</span>`;
+                const img = item.querySelector('img');
+                img.onload = () => item.classList.remove('loading');
+                img.onerror = () => { item.style.display = 'none'; };
+                item.addEventListener('click', () => {
+                    nuclearLightboxImg.src = `lucki/${encodeURIComponent(filename)}`;
+                    nuclearLightbox.classList.add('active');
+                });
+                luckiGrid.appendChild(item);
+            });
+        }
+        initLuckiGrid();
+
+        function enterNuclearMode() {
+            isTransitioning = true;
+            gradientBar.classList.add('squishing');
+            setTimeout(() => {
+                transitionBlack.style.transition = 'height 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+                transitionBlack.style.height = '100vh';
+            }, 400);
+            setTimeout(() => {
+                isNuclearMode = true;
+                mainContent.classList.add('hidden');
+                nuclearGallery.classList.add('visible');
+                globalMiniBar.classList.add('visible');
+                editPanel.classList.add('dark-theme');
+                toggleBtn.classList.add('dark-theme');
+                menuIcon.style.opacity = '0';
+                gradientBar.classList.remove('squishing');
+                hoveredIndex = -1;
+                setTimeout(() => {
+                    transitionBlack.style.height = '0';
+                    isTransitioning = false;
+                }, 100);
+            }, 900);
+        }
+
+        function exitNuclearMode() {
+            isTransitioning = true;
+            transitionBlack.style.transition = 'height 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+            transitionBlack.style.height = '100vh';
+            setTimeout(() => {
+                isNuclearMode = false;
+                nuclearGallery.classList.remove('visible');
+                globalMiniBar.classList.remove('visible');
+                mainContent.classList.remove('hidden');
+                editPanel.classList.remove('dark-theme');
+                toggleBtn.classList.remove('dark-theme');
+                menuIcon.style.opacity = '1';
+                activeTrack = null;
+            }, 500);
+            setTimeout(() => { transitionBlack.style.height = '0'; }, 600);
+            setTimeout(() => { isTransitioning = false; }, 1100);
+        }
+
+        function enterLuckiMode() {
+            isTransitioning = true;
+            gradientBar.classList.add('squishing');
+            setTimeout(() => {
+                transitionBlack.style.transition = 'height 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+                transitionBlack.style.height = '100vh';
+            }, 400);
+            setTimeout(() => {
+                isLuckiMode = true;
+                mainContent.classList.add('hidden');
+                luckiGallery.classList.add('visible');
+                globalMiniBar.classList.add('visible');
+                editPanel.classList.add('dark-theme');
+                toggleBtn.classList.add('dark-theme');
+                menuIcon.style.opacity = '0';
+                gradientBar.classList.remove('squishing');
+                hoveredIndex = -1;
+                setTimeout(() => {
+                    transitionBlack.style.height = '0';
+                    isTransitioning = false;
+                }, 100);
+            }, 900);
+        }
+
+        function exitLuckiMode() {
+            isTransitioning = true;
+            transitionBlack.style.transition = 'height 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+            transitionBlack.style.height = '100vh';
+            setTimeout(() => {
+                isLuckiMode = false;
+                luckiGallery.classList.remove('visible');
+                globalMiniBar.classList.remove('visible');
+                mainContent.classList.remove('hidden');
+                editPanel.classList.remove('dark-theme');
+                toggleBtn.classList.remove('dark-theme');
+                menuIcon.style.opacity = '1';
+                activeTrack = null;
+            }, 500);
+            setTimeout(() => { transitionBlack.style.height = '0'; }, 600);
+            setTimeout(() => { isTransitioning = false; }, 1100);
+        }
+
+        // Click on global mini bar to exit current mode
+        globalMiniBar.addEventListener('click', () => {
+            if (!isTransitioning) {
+                if (isNuclearMode) exitNuclearMode();
+                else if (isLuckiMode) exitLuckiMode();
+                else if (isGodraysMode) exitGodraysMode();
+                else if (isDarkMode) exitDarkMode();
+            }
+        });
+
+        nuclearLightboxClose.addEventListener('click', () => { nuclearLightbox.classList.remove('active'); });
+        nuclearLightbox.addEventListener('click', (e) => { if (e.target === nuclearLightbox) nuclearLightbox.classList.remove('active'); });
+
+        // ========== ICON SPHERE ==========
+        const iconSVGs = [
+            `<svg viewBox="0 0 24 24"><path d="M12 3c-3 0-5 2-5 5v13M12 3c3 0 5 2 5 5v13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+            `<svg viewBox="0 0 24 24"><circle cx="12" cy="15" r="6" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M6 5c0 3 2.5 5 6 5s6-2 6-5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+            `<svg viewBox="0 0 24 24"><path d="M6 4h12M6 20h12M8 4v16M16 4v16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+            `<svg viewBox="0 0 24 24"><circle cx="7" cy="9" r="3" fill="none" stroke="currentColor" stroke-width="2.5"/><circle cx="17" cy="15" r="3" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M10 9c4 0 7-2 10-2M14 15c-4 0-7 2-10 2" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+            `<svg viewBox="0 0 24 24"><circle cx="8" cy="16" r="4" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M12 16c0-8 6-10 6-6s-3 6-3 10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+            `<svg viewBox="0 0 24 24"><path d="M5 4v12c0 2 1 4 3 4M10 4v12c0 2 1 4 3 4M15 4v8c2 0 4 2 4 4s-1 4-4 4" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+            `<svg viewBox="0 0 24 24"><path d="M4 17h16M12 17V9M6 9h12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M6 9c0-3 2.5-5 6-5s6 2 6 5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+            `<svg viewBox="0 0 24 24"><path d="M4 4v12c0 2 1 4 3 4M10 4v12c0 2 1 4 3 4M16 4v12c0 2 2 4 4 2l-2-2" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+            `<svg viewBox="0 0 24 24"><path d="M4 20L20 4M20 4h-8M20 4v8M8 12l4 4" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+            `<svg viewBox="0 0 24 24"><path d="M6 4v10c0 3 2 6 5 6h2c2 0 4-1 4-3s-2-3-4-3c2 0 4-2 4-4V4" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+            `<svg viewBox="0 0 24 24"><path d="M3 9l3 3 3-3 3 3 3-3 3 3 3-3M3 15l3 3 3-3 3 3 3-3 3 3 3-3" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+            `<svg viewBox="0 0 24 24"><path d="M6 4c4 4 4 12 0 16M18 4c-4 4-4 12 0 16M4 12h16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+            `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`,
+            `<svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+            `<svg viewBox="0 0 24 24"><circle cx="12" cy="10" r="5" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M12 15v6M9 18h6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M8 5c2-2 6-2 8 0" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+            `<svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="5" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M12 14v7M9 18h6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+            `<svg viewBox="0 0 24 24"><circle cx="10" cy="14" r="5" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M14 10l6-6M20 4h-5M20 4v5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+            `<svg viewBox="0 0 24 24"><path d="M8 4v16M4 12h10c2 0 4-2 4-4s-2-4-4-4H8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+            `<svg viewBox="0 0 24 24"><path d="M8 3v18M5 6h6M12 6c3 0 5 2 5 5s-2 5-5 5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+            `<svg viewBox="0 0 24 24"><path d="M12 4v16M8 7l4-3 4 3M6 10h12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><circle cx="12" cy="16" r="3" fill="none" stroke="currentColor" stroke-width="2"/></svg>`,
+        ];
+
+        const outerIconCount = 14;
+        const innerIconCount = 8;
+        const outerRadius = 220;
+        const innerRadius = 130;
+
+        let sphereIsRingsMode = true;
+        let sphereIsDragging = false;
+        let spherePreviousMouseX = 0;
+        let spherePreviousMouseY = 0;
+        let sphereOuterRotation = 0;
+        let sphereInnerRotation = 0;
+        let sphereInnerTiltX = 0;
+        let sphereVelocityOuter = 0;
+        let sphereVelocityInner = 0;
+        let sphereVelocityTiltX = 0;
+        let sphereRotationX = -15;
+        let sphereRotationY = 0;
+        let sphereAnimationId = null;
+        let sphereInitialized = false;
+
+        const sphereIconStates = [];
+        const sphereAllIcons = [];
+        const sphereOuterIcons = [];
+        const sphereInnerIcons = [];
+
+        function initSphereIcons() {
+            if (sphereInitialized) return;
+            sphereInitialized = true;
+
+            for (let i = 0; i < outerIconCount; i++) {
+                const icon = document.createElement('div');
+                icon.className = 'icon-item';
+                icon.innerHTML = `<div class="icon-inner">${iconSVGs[i % iconSVGs.length]}</div>`;
+                sphereContainer.appendChild(icon);
+                sphereOuterIcons.push(icon);
+                sphereAllIcons.push(icon);
+                sphereIconStates.push({ currentX: 0, currentY: 0, currentZ: 0, currentScale: 1, currentOpacity: 1, targetX: 0, targetY: 0, targetZ: 0, targetScale: 1, targetOpacity: 1 });
+            }
+
+            for (let i = 0; i < innerIconCount; i++) {
+                const icon = document.createElement('div');
+                icon.className = 'icon-item';
+                icon.innerHTML = `<div class="icon-inner">${iconSVGs[(i + outerIconCount) % iconSVGs.length]}</div>`;
+                sphereContainer.appendChild(icon);
+                sphereInnerIcons.push(icon);
+                sphereAllIcons.push(icon);
+                sphereIconStates.push({ currentX: 0, currentY: 0, currentZ: 0, currentScale: 1, currentOpacity: 1, targetX: 0, targetY: 0, targetZ: 0, targetScale: 1, targetOpacity: 1 });
+            }
+
+            updateSphereTargets();
+            snapSphereToTargets();
+            applySpherePositions();
+        }
+
+        function getSphereRingPosition(iconIndex, isOuter) {
+            const count = isOuter ? outerIconCount : innerIconCount;
+            const radius = isOuter ? outerRadius : innerRadius;
+            const rotation = isOuter ? sphereOuterRotation : sphereInnerRotation;
+            const localIndex = isOuter ? iconIndex : iconIndex - outerIconCount;
+            const angle = (localIndex / count) * Math.PI * 2 + rotation;
+            let x = Math.cos(angle) * radius;
+            let z = Math.sin(angle) * radius;
+            let y = 0;
+            if (!isOuter) {
+                const tiltRad = sphereInnerTiltX * Math.PI / 180;
+                y = z * Math.sin(tiltRad);
+                z = z * Math.cos(tiltRad);
+            }
+            const scale = 0.6 + (z + radius) / (radius * 2) * (isOuter ? 0.5 : 0.4);
+            const opacity = 0.4 + (z + radius) / (radius * 2) * 0.5;
+            return { x, y, z, scale, opacity };
+        }
+
+        function getSphereSpherePosition(iconIndex) {
+            const count = sphereAllIcons.length;
+            const radius = 180;
+            const phi = Math.PI * (3 - Math.sqrt(5));
+            const yNorm = 1 - (iconIndex / (count - 1)) * 2;
+            const radiusAtY = Math.sqrt(1 - yNorm * yNorm);
+            const theta = phi * iconIndex;
+
+            let x = Math.cos(theta) * radiusAtY * radius;
+            let z = Math.sin(theta) * radiusAtY * radius;
+            let y = yNorm * radius;
+
+            const cosY = Math.cos(sphereRotationY * Math.PI / 180);
+            const sinY = Math.sin(sphereRotationY * Math.PI / 180);
+            const rotatedX = x * cosY + z * sinY;
+            const rotatedZ = -x * sinY + z * cosY;
+            x = rotatedX;
+            z = rotatedZ;
+
+            const cosX = Math.cos(sphereRotationX * Math.PI / 180);
+            const sinX = Math.sin(sphereRotationX * Math.PI / 180);
+            const rotatedY = y * cosX - z * sinX;
+            const rotatedZ2 = y * sinX + z * cosX;
+            y = rotatedY;
+            z = rotatedZ2;
+
+            const scale = 0.6 + (z + radius) / (radius * 2) * 0.5;
+            const opacity = 0.4 + (z + radius) / (radius * 2) * 0.5;
+            return { x, y, z, scale, opacity };
+        }
+
+        function updateSphereTargets() {
+            sphereAllIcons.forEach((icon, i) => {
+                const state = sphereIconStates[i];
+                let pos;
+                if (sphereIsRingsMode) {
+                    const isOuter = i < outerIconCount;
+                    pos = getSphereRingPosition(i, isOuter);
+                } else {
+                    pos = getSphereSpherePosition(i);
+                }
+                state.targetX = pos.x; state.targetY = pos.y; state.targetZ = pos.z;
+                state.targetScale = pos.scale; state.targetOpacity = pos.opacity;
+            });
+        }
+
+        function applySpherePositions() {
+            sphereAllIcons.forEach((icon, i) => {
+                const state = sphereIconStates[i];
+                icon.style.transform = `translate3d(${state.currentX}px, ${state.currentY}px, ${state.currentZ}px) scale(${state.currentScale})`;
+                icon.style.opacity = state.currentOpacity;
+                icon.style.zIndex = Math.round(state.currentZ + 300);
+            });
+        }
+
+        function snapSphereToTargets() {
+            sphereAllIcons.forEach((icon, i) => {
+                const state = sphereIconStates[i];
+                state.currentX = state.targetX; state.currentY = state.targetY; state.currentZ = state.targetZ;
+                state.currentScale = state.targetScale; state.currentOpacity = state.targetOpacity;
+            });
+        }
+
+        function animateSphere() {
+            if (!sphereIsRingsMode) {
+                sphereRotationY += 0.15;
+            }
+            sphereVelocityOuter *= 0.95;
+            sphereVelocityInner *= 0.95;
+            sphereVelocityTiltX *= 0.95;
+            sphereOuterRotation += sphereVelocityOuter;
+            sphereInnerRotation += sphereVelocityInner;
+            sphereInnerTiltX += sphereVelocityTiltX;
+            sphereInnerTiltX = Math.max(-60, Math.min(60, sphereInnerTiltX));
+
+            updateSphereTargets();
+            sphereAllIcons.forEach((icon, i) => {
+                const state = sphereIconStates[i];
+                state.currentX += (state.targetX - state.currentX) * 0.12;
+                state.currentY += (state.targetY - state.currentY) * 0.12;
+                state.currentZ += (state.targetZ - state.currentZ) * 0.12;
+                state.currentScale += (state.targetScale - state.currentScale) * 0.12;
+                state.currentOpacity += (state.targetOpacity - state.currentOpacity) * 0.12;
+            });
+            applySpherePositions();
+            sphereAnimationId = requestAnimationFrame(animateSphere);
+        }
+
+        function initSphereAnimation() {
+            initSphereIcons();
+            if (!sphereAnimationId) animateSphere();
+        }
+
+        function stopSphereAnimation() {
+            if (sphereAnimationId) {
+                cancelAnimationFrame(sphereAnimationId);
+                sphereAnimationId = null;
+            }
+        }
+
+        sphereView.addEventListener('mousedown', (e) => {
+            sphereIsDragging = true;
+            spherePreviousMouseX = e.clientX;
+            spherePreviousMouseY = e.clientY;
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!sphereIsDragging) return;
+            const deltaX = e.clientX - spherePreviousMouseX;
+            const deltaY = e.clientY - spherePreviousMouseY;
+            if (sphereIsRingsMode) {
+                sphereVelocityOuter += deltaX * 0.002;
+                sphereVelocityInner += deltaX * 0.002;
+                sphereVelocityTiltX += deltaY * 0.15;
+            } else {
+                sphereRotationY += deltaX * 0.3;
+                sphereRotationX += deltaY * 0.3;
+            }
+            spherePreviousMouseX = e.clientX;
+            spherePreviousMouseY = e.clientY;
+        });
+
+        document.addEventListener('mouseup', () => { sphereIsDragging = false; });
+
+        sphereModeBtn.addEventListener('click', () => {
+            sphereIsRingsMode = false;
+            sphereModeBtn.classList.add('active');
+            ringsModeBtn.classList.remove('active');
+        });
+
+        ringsModeBtn.addEventListener('click', () => {
+            sphereIsRingsMode = true;
+            ringsModeBtn.classList.add('active');
+            sphereModeBtn.classList.remove('active');
+        });
+
+        // ========== INTRO ANIMATION ==========
+        const introOverlay = document.getElementById('introOverlay');
+        setTimeout(() => { introOverlay.classList.add('hidden'); }, 3000);
+
+        // ========== KEYBOARD EVENTS ==========
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (nuclearLightbox.classList.contains('active')) {
+                    nuclearLightbox.classList.remove('active');
+                } else if (isNuclearMode && !isTransitioning) {
+                    exitNuclearMode();
+                } else if (isLuckiMode && !isTransitioning) {
+                    exitLuckiMode();
+                } else if (isGodraysMode && !isTransitioning && menuState !== 3) {
+                    // Exit godrays from gradient bar mode
+                    exitGodraysMode();
+                } else if (isGodraysMode && menuState === 3) {
+                    // Exit godrays from menu mode
+                    closeGodraysView();
+                    menuState = 0;
+                } else if (isDarkMode && !isTransitioning) {
+                    exitDarkMode();
+                } else if (isGridMode && !isTransitioning) {
+                    closeGridView();
+                    menuState = 0;
+                } else if (isSphereMode && !isTransitioning) {
+                    closeSphereView();
+                    menuState = 0;
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

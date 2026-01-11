@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grid View - 33rd Creative</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #d8d8d8;
+            font-family: 'Montserrat', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            perspective: 1200px;
+        }
+
+        .grid-scene {
+            transform-style: preserve-3d;
+            transform: rotateX(12deg) rotateY(-8deg);
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(6, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 25px;
+            transform-style: preserve-3d;
+        }
+
+        /* 3D Cube */
+        .cube-wrapper {
+            width: 100px;
+            height: 100px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .cube-wrapper:hover {
+            transform: translateZ(80px) rotateX(-5deg) rotateY(5deg);
+            z-index: 100;
+        }
+
+        .cube-wrapper.faded {
+            transform: translateZ(-50px);
+            opacity: 0.2;
+        }
+
+        .cube {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transform: translateZ(-50px);
+            transition: transform 0.5s;
+        }
+
+        .cube-face {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: 700;
+            backface-visibility: visible;
+        }
+
+        .cube-face.front {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.4) 100%);
+            transform: translateZ(50px);
+            color: rgba(255, 255, 255, 0.8);
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            box-shadow: inset 0 0 30px rgba(255, 255, 255, 0.3);
+        }
+
+        .cube-face.back {
+            background: rgba(150, 150, 150, 0.3);
+            transform: rotateY(180deg) translateZ(50px);
+        }
+
+        .cube-face.right {
+            background: linear-gradient(to left, rgba(200, 200, 200, 0.6), rgba(180, 180, 180, 0.4));
+            transform: rotateY(90deg) translateZ(50px);
+            width: 100px;
+        }
+
+        .cube-face.left {
+            background: linear-gradient(to right, rgba(160, 160, 160, 0.5), rgba(140, 140, 140, 0.3));
+            transform: rotateY(-90deg) translateZ(50px);
+            width: 100px;
+        }
+
+        .cube-face.top {
+            background: linear-gradient(to bottom, rgba(230, 230, 230, 0.7), rgba(200, 200, 200, 0.5));
+            transform: rotateX(90deg) translateZ(50px);
+            height: 100px;
+        }
+
+        .cube-face.bottom {
+            background: rgba(120, 120, 120, 0.4);
+            transform: rotateX(-90deg) translateZ(50px);
+            height: 100px;
+        }
+
+        /* Shadow under cube */
+        .cube-shadow {
+            position: absolute;
+            bottom: -60px;
+            left: 10%;
+            width: 80%;
+            height: 20px;
+            background: radial-gradient(ellipse, rgba(0, 0, 0, 0.3) 0%, transparent 70%);
+            transform: rotateX(90deg);
+            filter: blur(5px);
+        }
+
+        .cube-wrapper:hover .cube-face.front {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%);
+            color: rgba(0, 0, 0, 0.5);
+        }
+
+        /* Track info overlay */
+        .track-info-overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s;
+            z-index: 410;
+        }
+
+        .track-info-overlay.visible {
+            opacity: 1;
+        }
+
+        .track-info-overlay .artist {
+            font-size: 64px;
+            font-weight: 900;
+            letter-spacing: 8px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            text-shadow: 0 4px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .track-info-overlay .song {
+            font-size: 24px;
+            font-weight: 500;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            opacity: 0.7;
+        }
+
+        /* Menu icon - top right */
+        .menu-icon {
+            position: fixed;
+            top: 20px;
+            right: 25px;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            z-index: 500;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .menu-icon::before {
+            content: '#';
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        /* ESC hint */
+        .esc-hint {
+            position: fixed;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            letter-spacing: 3px;
+            color: rgba(0, 0, 0, 0.3);
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="grid-scene">
+        <div class="grid-container" id="gridContainer"></div>
+    </div>
+
+    <div class="track-info-overlay" id="trackInfoOverlay">
+        <div class="artist" id="overlayArtist"></div>
+        <div class="song" id="overlaySong"></div>
+    </div>
+
+    <div class="menu-icon" id="menuIcon"></div>
+    <div class="esc-hint">ESC to exit</div>
+
+    <script>
+        const trackNames = ['NUCLEAR', 'WAVES', 'DRIFT', '33', 'WANT IT', 'ECHOES', 'PULSE', 'LUCKI', 'FLUX', 'HAZE', 'BLOOM', 'STATIC'];
+        const artistNames = ['SANNHET', 'FLYING LOTUS', 'TYCHO', 'BONOBO', 'MASSIVE ATTACK', 'BOARDS OF CANADA', 'APHEX TWIN', 'BURIAL', 'FOUR TET', 'CARIBOU', 'MODERAT', 'AMON TOBIN'];
+        const trackColors = ['#e91e1e', '#ff6b35', '#f7c948', '#2ecc71', '#3498db', '#9b59b6', '#e74c3c', '#1abc9c', '#f39c12', '#8e44ad', '#16a085', '#a55eea'];
+
+        const gridContainer = document.getElementById('gridContainer');
+        const trackInfoOverlay = document.getElementById('trackInfoOverlay');
+        const overlayArtist = document.getElementById('overlayArtist');
+        const overlaySong = document.getElementById('overlaySong');
+        const menuIcon = document.getElementById('menuIcon');
+
+        // Track URLs for navigation
+        const trackUrls = {
+            0: '../tracks/nuclear.html',  // NUCLEAR
+            3: 'godrays.html',             // 33
+            7: '../tracks/lucki.html'      // LUCKI
+        };
+
+        // Create 18 cubes (6x3 grid)
+        const cubeData = [];
+        for (let i = 1; i <= 18; i++) {
+            cubeData.push({ num: String(i).padStart(2, '0'), track: (i - 1) % 12 });
+        }
+
+        cubeData.forEach(data => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'cube-wrapper';
+            wrapper.dataset.track = data.track;
+            wrapper.dataset.color = trackColors[data.track];
+            wrapper.dataset.artist = artistNames[data.track];
+            wrapper.dataset.song = trackNames[data.track];
+
+            wrapper.innerHTML = `
+                <div class="cube">
+                    <div class="cube-face front"></div>
+                    <div class="cube-face back"></div>
+                    <div class="cube-face right"></div>
+                    <div class="cube-face left"></div>
+                    <div class="cube-face top"></div>
+                    <div class="cube-face bottom"></div>
+                </div>
+                <div class="cube-shadow"></div>
+            `;
+            gridContainer.appendChild(wrapper);
+        });
+
+        const cubeWrappers = document.querySelectorAll('.cube-wrapper');
+
+        // Hover effects
+        cubeWrappers.forEach(wrapper => {
+            wrapper.addEventListener('mouseenter', () => {
+                const artist = wrapper.dataset.artist;
+                const song = wrapper.dataset.song;
+                const color = wrapper.dataset.color;
+
+                overlayArtist.textContent = artist;
+                overlaySong.textContent = song;
+                overlayArtist.style.color = color;
+                trackInfoOverlay.classList.add('visible');
+
+                cubeWrappers.forEach(w => {
+                    if (w !== wrapper) w.classList.add('faded');
+                });
+            });
+
+            wrapper.addEventListener('mouseleave', () => {
+                trackInfoOverlay.classList.remove('visible');
+                cubeWrappers.forEach(w => w.classList.remove('faded'));
+            });
+
+            // Click to navigate to track
+            wrapper.addEventListener('click', () => {
+                const trackIndex = parseInt(wrapper.dataset.track);
+                if (trackUrls[trackIndex]) {
+                    window.location.href = trackUrls[trackIndex];
+                }
+            });
+        });
+
+        // Menu icon - go to sphere view
+        menuIcon.addEventListener('click', () => {
+            window.location.href = 'sphere.html';
+        });
+
+        // ESC key - go back to main
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                window.location.href = '../index.html';
+            }
+        });
+    </script>
+</body>
+
+</html>
+
