@@ -631,6 +631,22 @@
             .cube {
                 transform: translateZ(-30px) !important;
             }
+
+            /* Hide shadows on mobile by default, except bottom row */
+            .cube-wrapper .cube-shadow {
+                opacity: 0 !important;
+                transition: opacity 0.3s;
+            }
+
+            /* Bottom 3 cubes (indices 15, 16, 17 in 3x6 grid) always show shadow */
+            .cube-wrapper:nth-child(n+16) .cube-shadow {
+                opacity: 1 !important;
+            }
+
+            /* Show shadow when cube is clicked/active */
+            .cube-wrapper.shadow-active .cube-shadow {
+                opacity: 1 !important;
+            }
         }
 
         .edit-panel {
@@ -1047,6 +1063,8 @@
             z-index: 150;
             transition: opacity 0.5s;
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
         }
 
         .nuclear-gallery.visible {
@@ -1074,6 +1092,30 @@
             background: #151515;
             cursor: pointer;
             transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s;
+        }
+
+        /* First frame preview canvas */
+        .nuclear-item canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Hide animated GIF until hovering */
+        .nuclear-item img {
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .nuclear-item.loaded img {
+            opacity: 1;
+        }
+
+        .nuclear-item.loaded canvas {
+            opacity: 0;
         }
 
         .nuclear-item:hover {
@@ -1254,6 +1296,8 @@
             z-index: 150;
             transition: opacity 0.5s;
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
         }
 
         .lucki-gallery.visible {
@@ -1281,6 +1325,30 @@
             background: #151515;
             cursor: pointer;
             transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s;
+        }
+
+        /* First frame preview canvas */
+        .lucki-item canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Hide animated GIF until hovering */
+        .lucki-item img {
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .lucki-item.loaded img {
+            opacity: 1;
+        }
+
+        .lucki-item.loaded canvas {
+            opacity: 0;
         }
 
         .lucki-item:hover {
@@ -2055,8 +2123,6 @@
                 if (!isGridMode) return;
 
                 const color = cube.dataset.color;
-                const artist = cube.dataset.artist;
-                const song = cube.dataset.song;
 
                 cubeWrappers.forEach(other => {
                     if (other !== cube) other.classList.add('faded');
@@ -2064,20 +2130,29 @@
 
                 gridView.style.background = hexToRgba(color, 0.5);
 
-                overlayArtist.textContent = artist;
-                overlayArtist.style.color = color;
-                overlaySong.textContent = song;
-                overlaySong.style.color = color;
+                // Show "UNDER CONSTRUCTION" on hover (same as click)
+                const greyedColor = '#888888';
+                overlayArtist.textContent = 'UNDER';
+                overlayArtist.style.color = greyedColor;
+                overlaySong.textContent = 'CONSTRUCTION';
+                overlaySong.style.color = greyedColor;
                 trackInfoOverlay.classList.add('visible');
+                trackInfoOverlay.style.opacity = '0.6';
             });
 
             cube.addEventListener('mouseleave', () => {
                 cubeWrappers.forEach(c => c.classList.remove('faded'));
                 gridView.style.background = '#d8d8d8';
                 trackInfoOverlay.classList.remove('visible');
+                trackInfoOverlay.style.opacity = '';
             });
 
             cube.addEventListener('click', () => {
+                // Toggle shadow on mobile
+                if (window.innerWidth <= 768) {
+                    cube.classList.toggle('shadow-active');
+                }
+
                 // Desaturate color for greyed out look
                 const greyedColor = '#888888';
                 overlayArtist.textContent = 'UNDER';
@@ -2284,12 +2359,62 @@
                 const item = document.createElement('div');
                 item.className = 'nuclear-item loading';
                 let displayName = filename.replace('.gif', '').replace('Untitled video - Made with Clipchamp ', 'Clip ');
-                item.innerHTML = `<img src="nuclear/${encodeURIComponent(filename)}" alt="${displayName}" loading="lazy"><span class="item-title">${displayName}</span>`;
+                const gifUrl = `nuclear/${encodeURIComponent(filename)}`;
+                item.innerHTML = `<canvas></canvas><img data-src="${gifUrl}" alt="${displayName}"><span class="item-title">${displayName}</span>`;
                 const img = item.querySelector('img');
-                img.onload = () => item.classList.remove('loading');
-                img.onerror = () => { item.style.display = 'none'; };
-                item.addEventListener('click', () => {
-                    nuclearLightboxImg.src = `nuclear/${encodeURIComponent(filename)}`;
+                const canvas = item.querySelector('canvas');
+                const ctx = canvas.getContext('2d');
+
+                // Load first frame preview
+                const previewImg = new Image();
+                previewImg.crossOrigin = 'anonymous';
+                previewImg.onload = () => {
+                    canvas.width = previewImg.naturalWidth;
+                    canvas.height = previewImg.naturalHeight;
+                    ctx.drawImage(previewImg, 0, 0);
+                    item.classList.remove('loading');
+                };
+                previewImg.onerror = () => { item.style.display = 'none'; };
+                previewImg.src = gifUrl;
+
+                // Play GIF on hover (desktop)
+                item.addEventListener('mouseenter', () => {
+                    item.classList.add('loaded');
+                    img.src = img.dataset.src;
+                });
+
+                // Stop GIF when not hovering (desktop)
+                item.addEventListener('mouseleave', () => {
+                    img.removeAttribute('src');
+                    item.classList.remove('loaded');
+                });
+
+                // Touch support for mobile - tap to toggle play, double tap for lightbox
+                let lastTap = 0;
+                item.addEventListener('touchend', (e) => {
+                    const now = Date.now();
+                    if (now - lastTap < 300) {
+                        // Double tap - open lightbox
+                        nuclearLightboxImg.src = gifUrl;
+                        nuclearLightbox.classList.add('active');
+                        e.preventDefault();
+                    } else {
+                        // Single tap - toggle GIF
+                        if (item.classList.contains('loaded')) {
+                            img.removeAttribute('src');
+                            item.classList.remove('loaded');
+                        } else {
+                            item.classList.add('loaded');
+                            img.src = img.dataset.src;
+                        }
+                    }
+                    lastTap = now;
+                });
+
+                // Desktop click for lightbox
+                item.addEventListener('click', (e) => {
+                    if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
+                    nuclearLightboxImg.src = gifUrl;
                     nuclearLightbox.classList.add('active');
                 });
                 nuclearGrid.appendChild(item);
@@ -2324,12 +2449,62 @@
                 const item = document.createElement('div');
                 item.className = 'lucki-item loading';
                 let displayName = filename.replace('.gif', '').replace('Untitled video - Made with Clipchamp ', 'Clip ').replace('Recording ', 'Rec ');
-                item.innerHTML = `<img src="lucki/${encodeURIComponent(filename)}" alt="${displayName}" loading="lazy"><span class="item-title">${displayName}</span>`;
+                const gifUrl = `lucki/${encodeURIComponent(filename)}`;
+                item.innerHTML = `<canvas></canvas><img data-src="${gifUrl}" alt="${displayName}"><span class="item-title">${displayName}</span>`;
                 const img = item.querySelector('img');
-                img.onload = () => item.classList.remove('loading');
-                img.onerror = () => { item.style.display = 'none'; };
-                item.addEventListener('click', () => {
-                    nuclearLightboxImg.src = `lucki/${encodeURIComponent(filename)}`;
+                const canvas = item.querySelector('canvas');
+                const ctx = canvas.getContext('2d');
+
+                // Load first frame preview
+                const previewImg = new Image();
+                previewImg.crossOrigin = 'anonymous';
+                previewImg.onload = () => {
+                    canvas.width = previewImg.naturalWidth;
+                    canvas.height = previewImg.naturalHeight;
+                    ctx.drawImage(previewImg, 0, 0);
+                    item.classList.remove('loading');
+                };
+                previewImg.onerror = () => { item.style.display = 'none'; };
+                previewImg.src = gifUrl;
+
+                // Play GIF on hover (desktop)
+                item.addEventListener('mouseenter', () => {
+                    item.classList.add('loaded');
+                    img.src = img.dataset.src;
+                });
+
+                // Stop GIF when not hovering (desktop)
+                item.addEventListener('mouseleave', () => {
+                    img.removeAttribute('src');
+                    item.classList.remove('loaded');
+                });
+
+                // Touch support for mobile - tap to toggle play, double tap for lightbox
+                let lastTap = 0;
+                item.addEventListener('touchend', (e) => {
+                    const now = Date.now();
+                    if (now - lastTap < 300) {
+                        // Double tap - open lightbox
+                        nuclearLightboxImg.src = gifUrl;
+                        nuclearLightbox.classList.add('active');
+                        e.preventDefault();
+                    } else {
+                        // Single tap - toggle GIF
+                        if (item.classList.contains('loaded')) {
+                            img.removeAttribute('src');
+                            item.classList.remove('loaded');
+                        } else {
+                            item.classList.add('loaded');
+                            img.src = img.dataset.src;
+                        }
+                    }
+                    lastTap = now;
+                });
+
+                // Desktop click for lightbox
+                item.addEventListener('click', (e) => {
+                    if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
+                    nuclearLightboxImg.src = gifUrl;
                     nuclearLightbox.classList.add('active');
                 });
                 luckiGrid.appendChild(item);
@@ -2650,6 +2825,7 @@
             }
         }
 
+        // Mouse events for desktop
         sphereView.addEventListener('mousedown', (e) => {
             sphereIsDragging = true;
             spherePreviousMouseX = e.clientX;
@@ -2673,6 +2849,33 @@
         });
 
         document.addEventListener('mouseup', () => { sphereIsDragging = false; });
+
+        // Touch events for mobile
+        sphereView.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                sphereIsDragging = true;
+                spherePreviousMouseX = e.touches[0].clientX;
+                spherePreviousMouseY = e.touches[0].clientY;
+            }
+        }, { passive: true });
+
+        document.addEventListener('touchmove', (e) => {
+            if (!sphereIsDragging || e.touches.length !== 1) return;
+            const deltaX = e.touches[0].clientX - spherePreviousMouseX;
+            const deltaY = e.touches[0].clientY - spherePreviousMouseY;
+            if (sphereIsRingsMode) {
+                sphereVelocityOuter += deltaX * 0.002;
+                sphereVelocityInner += deltaX * 0.002;
+                sphereVelocityTiltX += deltaY * 0.15;
+            } else {
+                sphereRotationY += deltaX * 0.3;
+                sphereRotationX += deltaY * 0.3;
+            }
+            spherePreviousMouseX = e.touches[0].clientX;
+            spherePreviousMouseY = e.touches[0].clientY;
+        }, { passive: true });
+
+        document.addEventListener('touchend', () => { sphereIsDragging = false; });
 
         sphereModeBtn.addEventListener('click', () => {
             sphereIsRingsMode = false;

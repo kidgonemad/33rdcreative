@@ -991,6 +991,52 @@
         let raySourceName = 'Light';
         const loader = new GLTFLoader();
 
+        // DEFAULT SETTINGS - Edit these values to change the initial camera/lighting state
+        const DEFAULT_SETTINGS = {
+            camX: 3.95,
+            camY: -1.23,
+            camZ: 9.42,
+            fov: 45,
+            targetX: 3.83,
+            targetY: -0.52,
+            targetZ: -0.40,
+            modelX: 0,
+            modelY: 0,
+            modelZ: 0,
+            modelScale: 100,
+            ambient: 0.2,
+            ambientColor: "#ffffff",
+            env: 0.5,
+            hemiSkyColor: "#ffffff",
+            hemiGroundColor: "#444444",
+            dir: 0.3,
+            dirColor: "#ffffff",
+            dirX: 5,
+            dirY: 10,
+            dirZ: 5,
+            point: 1,
+            pointColor: "#ffffff",
+            pointX: 0,
+            pointY: 5,
+            pointZ: 5,
+            spotIntensity: 1.5,
+            spotColor: "#ffffff",
+            spotX: 0,
+            spotY: 10,
+            spotZ: 10,
+            spotAngle: 30,
+            spotPenumbra: 0.5,
+            godraysEnabled: true,
+            godraysDensity: 0.96,
+            godraysWeight: 0.4,
+            godraysDecay: 0.95,
+            godraysExposure: 0.08,
+            godraysSamples: 60,
+            raySourceEnabled: true,
+            autoRotate: false,
+            colorMode: 0
+        };
+
         function rebuildGodRays() {
             // Remove old effect pass
             composer.removePass(effectPass);
@@ -1271,27 +1317,23 @@
                     }
 
                     // Re-apply camera settings after model loads to ensure they stick
-                    const savedCam = localStorage.getItem(CAMERA_STORAGE_KEY);
-                    if (savedCam) {
-                        try {
-                            const s = JSON.parse(savedCam);
-                            camera.position.set(s.camX ?? 0, s.camY ?? 2, s.camZ ?? 15);
-                            camera.fov = s.fov ?? 60;
-                            camera.updateProjectionMatrix();
-                            if (s.targetX !== undefined) {
-                                controls.target.set(s.targetX, s.targetY ?? 0, s.targetZ ?? 0);
-                            }
-                            controls.update();
-
-                            // Update UI sliders to match actual camera position
-                            document.getElementById('cam-x-slider').value = Math.round(camera.position.x);
-                            document.getElementById('cam-x-value').textContent = Math.round(camera.position.x).toString();
-                            document.getElementById('cam-y-slider').value = Math.round(camera.position.y);
-                            document.getElementById('cam-y-value').textContent = Math.round(camera.position.y).toString();
-                            document.getElementById('cam-z-slider').value = Math.max(1, Math.round(camera.position.z));
-                            document.getElementById('cam-z-value').textContent = Math.round(camera.position.z).toString();
-                        } catch (e) { }
+                    // Uses DEFAULT_SETTINGS defined in the HTML (not localStorage)
+                    const s = window.DEFAULT_SETTINGS || DEFAULT_SETTINGS;
+                    camera.position.set(s.camX ?? 0, s.camY ?? 2, s.camZ ?? 15);
+                    camera.fov = s.fov ?? 60;
+                    camera.updateProjectionMatrix();
+                    if (s.targetX !== undefined) {
+                        controls.target.set(s.targetX, s.targetY ?? 0, s.targetZ ?? 0);
                     }
+                    controls.update();
+
+                    // Update UI sliders to match actual camera position
+                    document.getElementById('cam-x-slider').value = Math.round(camera.position.x);
+                    document.getElementById('cam-x-value').textContent = Math.round(camera.position.x).toString();
+                    document.getElementById('cam-y-slider').value = Math.round(camera.position.y);
+                    document.getElementById('cam-y-value').textContent = Math.round(camera.position.y).toString();
+                    document.getElementById('cam-z-slider').value = Math.max(1, Math.round(camera.position.z));
+                    document.getElementById('cam-z-value').textContent = Math.round(camera.position.z).toString();
 
                     rebuildGodRays();
                 },
@@ -1523,186 +1565,185 @@
             localStorage.setItem(CAMERA_STORAGE_KEY, JSON.stringify(settings));
         }
 
-        function loadCameraSettings() {
-            const saved = localStorage.getItem(CAMERA_STORAGE_KEY);
-            if (saved) {
-                try {
-                    const settings = JSON.parse(saved);
+        function applySettings(settings) {
+            console.log('applySettings called with:', settings);
+            // Apply camera position
+            camera.position.x = settings.camX ?? 0;
+            camera.position.y = settings.camY ?? 2;
+            camera.position.z = settings.camZ ?? 15;
+            camera.fov = settings.fov ?? 60;
+            camera.updateProjectionMatrix();
 
-                    // Apply camera position
-                    camera.position.x = settings.camX ?? 0;
-                    camera.position.y = settings.camY ?? 2;
-                    camera.position.z = settings.camZ ?? 15;
-                    camera.fov = settings.fov ?? 60;
-                    camera.updateProjectionMatrix();
-
-                    // Apply controls target if available
-                    if (settings.targetX !== undefined) {
-                        controls.target.set(
-                            settings.targetX,
-                            settings.targetY ?? 0,
-                            settings.targetZ ?? 0
-                        );
-                    }
-                    controls.update();
-
-                    // Apply ambient light
-                    ambientLight.intensity = settings.ambient ?? 0.1;
-                    if (settings.ambientColor) ambientLight.color.set(settings.ambientColor);
-
-                    // Apply hemisphere light
-                    hemiLight.intensity = settings.env ?? 0.5;
-                    if (settings.hemiSkyColor) hemiLight.color.set(settings.hemiSkyColor);
-                    if (settings.hemiGroundColor) hemiLight.groundColor.set(settings.hemiGroundColor);
-
-                    // Apply directional light
-                    dirLight.intensity = settings.dir ?? 0.3;
-                    if (settings.dirColor) dirLight.color.set(settings.dirColor);
-                    dirLight.position.x = settings.dirX ?? 5;
-                    dirLight.position.y = settings.dirY ?? 10;
-                    dirLight.position.z = settings.dirZ ?? 5;
-
-                    // Apply point light
-                    pointLight.intensity = settings.point ?? 1;
-                    if (settings.pointColor) pointLight.color.set(settings.pointColor);
-                    pointLight.position.x = settings.pointX ?? 0;
-                    pointLight.position.y = settings.pointY ?? 5;
-                    pointLight.position.z = settings.pointZ ?? 5;
-
-                    // Apply god rays settings
-                    if (settings.godraysDensity !== undefined) godRaysSettings.density = settings.godraysDensity;
-                    if (settings.godraysWeight !== undefined) godRaysSettings.weight = settings.godraysWeight;
-                    if (settings.godraysDecay !== undefined) godRaysSettings.decay = settings.godraysDecay;
-                    if (settings.godraysExposure !== undefined) godRaysSettings.exposure = settings.godraysExposure;
-                    if (settings.godraysSamples !== undefined) godRaysSettings.samples = settings.godraysSamples;
-
-                    // Apply other settings
-                    if (settings.autoRotate !== undefined) controls.autoRotate = settings.autoRotate;
-                    if (settings.colorMode !== undefined) colorMode = settings.colorMode;
-                    if (settings.raySourceEnabled !== undefined) raySourceEnabled = settings.raySourceEnabled;
-
-                    // Update UI sliders - Camera panel
-                    document.getElementById('cam-x-slider').value = settings.camX ?? 0;
-                    document.getElementById('cam-x-value').textContent = Math.round(settings.camX ?? 0).toString();
-                    document.getElementById('cam-y-slider').value = settings.camY ?? 2;
-                    document.getElementById('cam-y-value').textContent = Math.round(settings.camY ?? 2).toString();
-                    document.getElementById('cam-z-slider').value = settings.camZ ?? 15;
-                    document.getElementById('cam-z-value').textContent = Math.round(settings.camZ ?? 15).toString();
-                    document.getElementById('cam-fov-slider').value = settings.fov ?? 60;
-                    document.getElementById('cam-fov-value').textContent = Math.round(settings.fov ?? 60).toString();
-
-                    document.getElementById('model-x-slider').value = settings.modelX ?? 0;
-                    document.getElementById('model-x-value').textContent = Math.round(settings.modelX ?? 0).toString();
-                    document.getElementById('model-y-slider').value = settings.modelY ?? 0;
-                    document.getElementById('model-y-value').textContent = Math.round(settings.modelY ?? 0).toString();
-                    document.getElementById('model-z-slider').value = settings.modelZ ?? 0;
-                    document.getElementById('model-z-value').textContent = Math.round(settings.modelZ ?? 0).toString();
-
-                    // Camera panel lighting sliders
-                    document.getElementById('ambient-slider').value = (settings.ambient ?? 0.1) * 100;
-                    document.getElementById('ambient-value').textContent = (settings.ambient ?? 0.1).toFixed(1);
-                    document.getElementById('env-slider').value = (settings.env ?? 0.5) * 100;
-                    document.getElementById('env-value').textContent = (settings.env ?? 0.5).toFixed(1);
-
-                    // Env panel - Ambient
-                    document.getElementById('ambient-slider2').value = (settings.ambient ?? 0.1) * 100;
-                    document.getElementById('ambient-value2').textContent = (settings.ambient ?? 0.1).toFixed(1);
-                    if (settings.ambientColor) document.getElementById('ambient-color').value = settings.ambientColor;
-
-                    // Env panel - Hemisphere
-                    document.getElementById('env-slider2').value = (settings.env ?? 0.5) * 100;
-                    document.getElementById('env-value2').textContent = (settings.env ?? 0.5).toFixed(1);
-                    if (settings.hemiSkyColor) document.getElementById('hemi-sky-color').value = settings.hemiSkyColor;
-                    if (settings.hemiGroundColor) document.getElementById('hemi-ground-color').value = settings.hemiGroundColor;
-
-                    // Env panel - Directional
-                    document.getElementById('dir-slider').value = (settings.dir ?? 0.3) * 100;
-                    document.getElementById('dir-value').textContent = (settings.dir ?? 0.3).toFixed(1);
-                    if (settings.dirColor) document.getElementById('dir-color').value = settings.dirColor;
-                    document.getElementById('dir-x-slider').value = settings.dirX ?? 5;
-                    document.getElementById('dir-x-value').textContent = Math.round(settings.dirX ?? 5).toString();
-                    document.getElementById('dir-y-slider').value = settings.dirY ?? 10;
-                    document.getElementById('dir-y-value').textContent = Math.round(settings.dirY ?? 10).toString();
-                    document.getElementById('dir-z-slider').value = settings.dirZ ?? 5;
-                    document.getElementById('dir-z-value').textContent = Math.round(settings.dirZ ?? 5).toString();
-
-                    // Selective Spotlight
-                    selectiveLight.intensity = settings.spotIntensity ?? 0;
-                    if (settings.spotColor) selectiveLight.color.set(settings.spotColor);
-                    selectiveLight.position.x = settings.spotX ?? 0;
-                    selectiveLight.position.y = settings.spotY ?? 10;
-                    selectiveLight.position.z = settings.spotZ ?? 10;
-                    selectiveLight.angle = ((settings.spotAngle ?? 45) * Math.PI) / 180;
-                    selectiveLight.penumbra = settings.spotPenumbra ?? 0.5;
-                    if (settings.selectiveTargets) selectiveLightTargets = settings.selectiveTargets;
-
-                    document.getElementById('dir2-slider').value = (settings.spotIntensity ?? 0) * 100;
-                    document.getElementById('dir2-value').textContent = (settings.spotIntensity ?? 0).toFixed(1);
-                    if (settings.spotColor) document.getElementById('dir2-color').value = settings.spotColor;
-                    document.getElementById('spot-x-slider').value = settings.spotX ?? 0;
-                    document.getElementById('spot-x-value').textContent = Math.round(settings.spotX ?? 0).toString();
-                    document.getElementById('spot-y-slider').value = settings.spotY ?? 10;
-                    document.getElementById('spot-y-value').textContent = Math.round(settings.spotY ?? 10).toString();
-                    document.getElementById('spot-z-slider').value = settings.spotZ ?? 10;
-                    document.getElementById('spot-z-value').textContent = Math.round(settings.spotZ ?? 10).toString();
-                    document.getElementById('spot-angle-slider').value = settings.spotAngle ?? 45;
-                    document.getElementById('spot-angle-value').textContent = Math.round(settings.spotAngle ?? 45).toString();
-                    document.getElementById('spot-penumbra-slider').value = (settings.spotPenumbra ?? 0.5) * 100;
-                    document.getElementById('spot-penumbra-value').textContent = (settings.spotPenumbra ?? 0.5).toFixed(1);
-
-                    // Env panel - Point light
-                    document.getElementById('point-slider').value = (settings.point ?? 1) * 100;
-                    document.getElementById('point-value').textContent = (settings.point ?? 1).toFixed(1);
-                    if (settings.pointColor) document.getElementById('point-color').value = settings.pointColor;
-                    document.getElementById('point-x-slider').value = settings.pointX ?? 0;
-                    document.getElementById('point-x-value').textContent = Math.round(settings.pointX ?? 0).toString();
-                    document.getElementById('point-y-slider').value = settings.pointY ?? 5;
-                    document.getElementById('point-y-value').textContent = Math.round(settings.pointY ?? 5).toString();
-                    document.getElementById('point-z-slider').value = settings.pointZ ?? 5;
-                    document.getElementById('point-z-value').textContent = Math.round(settings.pointZ ?? 5).toString();
-
-                    // Scale slider
-                    if (settings.modelScale) {
-                        document.getElementById('scale-slider').value = settings.modelScale;
-                        document.getElementById('scale-value').textContent = Math.round(settings.modelScale).toString();
-                    }
-
-                    // God rays sliders
-                    document.getElementById('density-slider').value = (settings.godraysDensity ?? 1) * 100;
-                    document.getElementById('density-value').textContent = (settings.godraysDensity ?? 1).toFixed(1);
-                    document.getElementById('weight-slider').value = (settings.godraysWeight ?? 0.5) * 100;
-                    document.getElementById('weight-value').textContent = (settings.godraysWeight ?? 0.5).toFixed(2);
-                    document.getElementById('decay-slider').value = (settings.godraysDecay ?? 0.9) * 100;
-                    document.getElementById('decay-value').textContent = (settings.godraysDecay ?? 0.9).toFixed(2);
-                    document.getElementById('exposure-slider').value = (settings.godraysExposure ?? 0.3) * 100;
-                    document.getElementById('exposure-value').textContent = (settings.godraysExposure ?? 0.3).toFixed(2);
-                    document.getElementById('samples-slider').value = settings.godraysSamples ?? 20;
-                    document.getElementById('samples-value').textContent = (settings.godraysSamples ?? 20).toString();
-
-                    // Load toggle states
-                    raySourceEnabled = settings.raySourceEnabled !== false; // Default to true
-                    godRaysEnabled = raySourceEnabled;
-
-                    // Store model position and scale to apply when model loads
-                    window.savedModelPosition = {
-                        x: settings.modelX ?? 0,
-                        y: settings.modelY ?? 0,
-                        z: settings.modelZ ?? 0
-                    };
-                    window.savedModelScale = settings.modelScale ?? 100;
-                    window.savedControlsTarget = {
-                        x: settings.targetX ?? 0,
-                        y: settings.targetY ?? 0,
-                        z: settings.targetZ ?? 0
-                    };
-                    window.savedSettings = settings;
-
-                    return true;
-                } catch (e) {
-                    console.warn('Failed to load camera settings:', e);
-                }
+            // Apply controls target if available
+            if (settings.targetX !== undefined) {
+                controls.target.set(
+                    settings.targetX,
+                    settings.targetY ?? 0,
+                    settings.targetZ ?? 0
+                );
             }
-            return false;
+            controls.update();
+
+            // Apply ambient light
+            ambientLight.intensity = settings.ambient ?? 0.1;
+            if (settings.ambientColor) ambientLight.color.set(settings.ambientColor);
+
+            // Apply hemisphere light
+            hemiLight.intensity = settings.env ?? 0.5;
+            if (settings.hemiSkyColor) hemiLight.color.set(settings.hemiSkyColor);
+            if (settings.hemiGroundColor) hemiLight.groundColor.set(settings.hemiGroundColor);
+
+            // Apply directional light
+            dirLight.intensity = settings.dir ?? 0.3;
+            if (settings.dirColor) dirLight.color.set(settings.dirColor);
+            dirLight.position.x = settings.dirX ?? 5;
+            dirLight.position.y = settings.dirY ?? 10;
+            dirLight.position.z = settings.dirZ ?? 5;
+
+            // Apply point light
+            pointLight.intensity = settings.point ?? 1;
+            if (settings.pointColor) pointLight.color.set(settings.pointColor);
+            pointLight.position.x = settings.pointX ?? 0;
+            pointLight.position.y = settings.pointY ?? 5;
+            pointLight.position.z = settings.pointZ ?? 5;
+
+            // Apply god rays settings
+            if (settings.godraysDensity !== undefined) godRaysSettings.density = settings.godraysDensity;
+            if (settings.godraysWeight !== undefined) godRaysSettings.weight = settings.godraysWeight;
+            if (settings.godraysDecay !== undefined) godRaysSettings.decay = settings.godraysDecay;
+            if (settings.godraysExposure !== undefined) godRaysSettings.exposure = settings.godraysExposure;
+            if (settings.godraysSamples !== undefined) godRaysSettings.samples = settings.godraysSamples;
+
+            // Apply other settings
+            if (settings.autoRotate !== undefined) controls.autoRotate = settings.autoRotate;
+            if (settings.colorMode !== undefined) colorMode = settings.colorMode;
+            if (settings.raySourceEnabled !== undefined) raySourceEnabled = settings.raySourceEnabled;
+
+            // Update UI sliders - Camera panel
+            document.getElementById('cam-x-slider').value = settings.camX ?? 0;
+            document.getElementById('cam-x-value').textContent = Math.round(settings.camX ?? 0).toString();
+            document.getElementById('cam-y-slider').value = settings.camY ?? 2;
+            document.getElementById('cam-y-value').textContent = Math.round(settings.camY ?? 2).toString();
+            document.getElementById('cam-z-slider').value = settings.camZ ?? 15;
+            document.getElementById('cam-z-value').textContent = Math.round(settings.camZ ?? 15).toString();
+            document.getElementById('cam-fov-slider').value = settings.fov ?? 60;
+            document.getElementById('cam-fov-value').textContent = Math.round(settings.fov ?? 60).toString();
+
+            document.getElementById('model-x-slider').value = settings.modelX ?? 0;
+            document.getElementById('model-x-value').textContent = Math.round(settings.modelX ?? 0).toString();
+            document.getElementById('model-y-slider').value = settings.modelY ?? 0;
+            document.getElementById('model-y-value').textContent = Math.round(settings.modelY ?? 0).toString();
+            document.getElementById('model-z-slider').value = settings.modelZ ?? 0;
+            document.getElementById('model-z-value').textContent = Math.round(settings.modelZ ?? 0).toString();
+
+            // Camera panel lighting sliders
+            document.getElementById('ambient-slider').value = (settings.ambient ?? 0.1) * 100;
+            document.getElementById('ambient-value').textContent = (settings.ambient ?? 0.1).toFixed(1);
+            document.getElementById('env-slider').value = (settings.env ?? 0.5) * 100;
+            document.getElementById('env-value').textContent = (settings.env ?? 0.5).toFixed(1);
+
+            // Env panel - Ambient
+            document.getElementById('ambient-slider2').value = (settings.ambient ?? 0.1) * 100;
+            document.getElementById('ambient-value2').textContent = (settings.ambient ?? 0.1).toFixed(1);
+            if (settings.ambientColor) document.getElementById('ambient-color').value = settings.ambientColor;
+
+            // Env panel - Hemisphere
+            document.getElementById('env-slider2').value = (settings.env ?? 0.5) * 100;
+            document.getElementById('env-value2').textContent = (settings.env ?? 0.5).toFixed(1);
+            if (settings.hemiSkyColor) document.getElementById('hemi-sky-color').value = settings.hemiSkyColor;
+            if (settings.hemiGroundColor) document.getElementById('hemi-ground-color').value = settings.hemiGroundColor;
+
+            // Env panel - Directional
+            document.getElementById('dir-slider').value = (settings.dir ?? 0.3) * 100;
+            document.getElementById('dir-value').textContent = (settings.dir ?? 0.3).toFixed(1);
+            if (settings.dirColor) document.getElementById('dir-color').value = settings.dirColor;
+            document.getElementById('dir-x-slider').value = settings.dirX ?? 5;
+            document.getElementById('dir-x-value').textContent = Math.round(settings.dirX ?? 5).toString();
+            document.getElementById('dir-y-slider').value = settings.dirY ?? 10;
+            document.getElementById('dir-y-value').textContent = Math.round(settings.dirY ?? 10).toString();
+            document.getElementById('dir-z-slider').value = settings.dirZ ?? 5;
+            document.getElementById('dir-z-value').textContent = Math.round(settings.dirZ ?? 5).toString();
+
+            // Selective Spotlight
+            selectiveLight.intensity = settings.spotIntensity ?? 0;
+            if (settings.spotColor) selectiveLight.color.set(settings.spotColor);
+            selectiveLight.position.x = settings.spotX ?? 0;
+            selectiveLight.position.y = settings.spotY ?? 10;
+            selectiveLight.position.z = settings.spotZ ?? 10;
+            selectiveLight.angle = ((settings.spotAngle ?? 45) * Math.PI) / 180;
+            selectiveLight.penumbra = settings.spotPenumbra ?? 0.5;
+            if (settings.selectiveTargets) selectiveLightTargets = settings.selectiveTargets;
+
+            document.getElementById('dir2-slider').value = (settings.spotIntensity ?? 0) * 100;
+            document.getElementById('dir2-value').textContent = (settings.spotIntensity ?? 0).toFixed(1);
+            if (settings.spotColor) document.getElementById('dir2-color').value = settings.spotColor;
+            document.getElementById('spot-x-slider').value = settings.spotX ?? 0;
+            document.getElementById('spot-x-value').textContent = Math.round(settings.spotX ?? 0).toString();
+            document.getElementById('spot-y-slider').value = settings.spotY ?? 10;
+            document.getElementById('spot-y-value').textContent = Math.round(settings.spotY ?? 10).toString();
+            document.getElementById('spot-z-slider').value = settings.spotZ ?? 10;
+            document.getElementById('spot-z-value').textContent = Math.round(settings.spotZ ?? 10).toString();
+            document.getElementById('spot-angle-slider').value = settings.spotAngle ?? 45;
+            document.getElementById('spot-angle-value').textContent = Math.round(settings.spotAngle ?? 45).toString();
+            document.getElementById('spot-penumbra-slider').value = (settings.spotPenumbra ?? 0.5) * 100;
+            document.getElementById('spot-penumbra-value').textContent = (settings.spotPenumbra ?? 0.5).toFixed(1);
+
+            // Env panel - Point light
+            document.getElementById('point-slider').value = (settings.point ?? 1) * 100;
+            document.getElementById('point-value').textContent = (settings.point ?? 1).toFixed(1);
+            if (settings.pointColor) document.getElementById('point-color').value = settings.pointColor;
+            document.getElementById('point-x-slider').value = settings.pointX ?? 0;
+            document.getElementById('point-x-value').textContent = Math.round(settings.pointX ?? 0).toString();
+            document.getElementById('point-y-slider').value = settings.pointY ?? 5;
+            document.getElementById('point-y-value').textContent = Math.round(settings.pointY ?? 5).toString();
+            document.getElementById('point-z-slider').value = settings.pointZ ?? 5;
+            document.getElementById('point-z-value').textContent = Math.round(settings.pointZ ?? 5).toString();
+
+            // Scale slider
+            if (settings.modelScale) {
+                document.getElementById('scale-slider').value = settings.modelScale;
+                document.getElementById('scale-value').textContent = Math.round(settings.modelScale).toString();
+            }
+
+            // God rays sliders
+            document.getElementById('density-slider').value = (settings.godraysDensity ?? 1) * 100;
+            document.getElementById('density-value').textContent = (settings.godraysDensity ?? 1).toFixed(1);
+            document.getElementById('weight-slider').value = (settings.godraysWeight ?? 0.5) * 100;
+            document.getElementById('weight-value').textContent = (settings.godraysWeight ?? 0.5).toFixed(2);
+            document.getElementById('decay-slider').value = (settings.godraysDecay ?? 0.9) * 100;
+            document.getElementById('decay-value').textContent = (settings.godraysDecay ?? 0.9).toFixed(2);
+            document.getElementById('exposure-slider').value = (settings.godraysExposure ?? 0.3) * 100;
+            document.getElementById('exposure-value').textContent = (settings.godraysExposure ?? 0.3).toFixed(2);
+            document.getElementById('samples-slider').value = settings.godraysSamples ?? 20;
+            document.getElementById('samples-value').textContent = (settings.godraysSamples ?? 20).toString();
+
+            // Load toggle states
+            raySourceEnabled = settings.raySourceEnabled !== false; // Default to true
+            godRaysEnabled = raySourceEnabled;
+
+            // Store model position and scale to apply when model loads
+            window.savedModelPosition = {
+                x: settings.modelX ?? 0,
+                y: settings.modelY ?? 0,
+                z: settings.modelZ ?? 0
+            };
+            window.savedModelScale = settings.modelScale ?? 100;
+            window.savedControlsTarget = {
+                x: settings.targetX ?? 0,
+                y: settings.targetY ?? 0,
+                z: settings.targetZ ?? 0
+            };
+            window.savedSettings = settings;
+
+            return true;
+        }
+
+        // Load settings - uses DEFAULT_SETTINGS defined at top of script (line ~995)
+        function loadCameraSettings() {
+            console.log('=== LOADING SETTINGS ===');
+            console.log('DEFAULT_SETTINGS:', DEFAULT_SETTINGS);
+            applySettings(DEFAULT_SETTINGS);
+            console.log('Settings applied!');
         }
 
         // Load saved settings on startup
