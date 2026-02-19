@@ -2221,8 +2221,21 @@
         function animate() {
             if (!isDarkMode && !isGridMode) {
                 if (isMobile) {
-                    // Mobile: bars stay flat, only color animates on gyro/touch
+                    // Mobile: subtle height wave + color on gyro/touch
+                    for (let i = 0; i < totalSegments; i++) {
+                        if (hoveredIndex === -1) {
+                            targetHeights[i] = 44;
+                        } else if (i === hoveredIndex) {
+                            targetHeights[i] = 54;
+                        } else {
+                            const d = Math.abs(i - hoveredIndex);
+                            targetHeights[i] = Math.max(38, 54 - (d * 4));
+                        }
+                    }
+
                     segments.forEach((seg, i) => {
+                        currentHeights[i] += (targetHeights[i] - currentHeights[i]) * params.smoothing;
+                        seg.style.height = currentHeights[i] + 'px';
 
                         if (hoveredIndex !== -1) {
                             const d = Math.abs(i - hoveredIndex);
