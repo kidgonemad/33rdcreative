@@ -722,6 +722,7 @@
             .bassvictim-item,
             .lucki-item {
                 border-radius: 4px !important;
+                touch-action: pan-y !important;
             }
 
             /* Glow effects - smaller on mobile */
@@ -1195,13 +1196,16 @@
         /* Nuclear Gallery View */
         .nuclear-gallery {
             position: fixed;
-            inset: 0;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background: #0a0a0a;
             opacity: 0;
             pointer-events: none;
             z-index: 150;
             transition: opacity 0.5s;
-            overflow-y: auto;
+            overflow-y: scroll;
             -webkit-overflow-scrolling: touch;
             overscroll-behavior: contain;
         }
@@ -1428,13 +1432,16 @@
         /* Lucki Gallery View */
         .lucki-gallery {
             position: fixed;
-            inset: 0;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background: #0a0a0a;
             opacity: 0;
             pointer-events: none;
             z-index: 150;
             transition: opacity 0.5s;
-            overflow-y: auto;
+            overflow-y: scroll;
             -webkit-overflow-scrolling: touch;
             overscroll-behavior: contain;
         }
@@ -1594,13 +1601,16 @@
         /* Bassvictim Gallery View */
         .bassvictim-gallery {
             position: fixed;
-            inset: 0;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background: #0a0a0a;
             opacity: 0;
             pointer-events: none;
             z-index: 150;
             transition: opacity 0.5s;
-            overflow-y: auto;
+            overflow-y: scroll;
             -webkit-overflow-scrolling: touch;
             overscroll-behavior: contain;
         }
