@@ -25,9 +25,6 @@
             overflow: hidden;
         }
 
-        body.gallery-open {
-            overflow: auto !important;
-        }
 
         .transition-overlay {
             position: fixed;
@@ -735,8 +732,8 @@
                 position: fixed !important;
                 top: 0 !important;
                 left: 0 !important;
-                width: 100vw !important;
-                height: 100vh !important;
+                width: 100% !important;
+                height: 100% !important;
                 overflow-x: hidden !important;
                 overflow-y: scroll !important;
                 -webkit-overflow-scrolling: touch !important;
@@ -747,7 +744,8 @@
             .bassvictim-grid-container,
             .lucki-grid-container {
                 padding: 60px 16px 40px !important;
-                max-width: 100vw !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
             }
 
             .nuclear-grid,
@@ -2417,14 +2415,17 @@
             animateMobileTilt();
 
             // First tap on bar: request gyro permission (iOS only)
-            gradientBar.addEventListener('touchend', () => {
+            gradientBar.addEventListener('touchend', (e) => {
                 if (needsIOSPermission && !gyroPermissionRequested) {
                     gyroPermissionRequested = true;
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
                     DeviceOrientationEvent.requestPermission().then(state => {
+                        console.log('Gyro permission:', state);
                         if (state === 'granted') startGyro();
-                    }).catch(() => {});
+                    }).catch((err) => { console.log('Gyro error:', err); });
+                    return;
                 }
-                // Don't preventDefault - let click event fire for gallery entry
             });
 
             // Recalibrate on double tap outside bar
@@ -2921,7 +2922,6 @@
             }, 400);
             setTimeout(() => {
                 isNuclearMode = true;
-                document.body.classList.add('gallery-open');
                 mainContent.classList.add('hidden');
                 nuclearGallery.classList.add('visible');
                 globalMiniBar.classList.add('visible');
@@ -2943,7 +2943,6 @@
             transitionBlack.style.height = '100vh';
             setTimeout(() => {
                 isNuclearMode = false;
-                document.body.classList.remove('gallery-open');
                 nuclearGallery.classList.remove('visible');
                 globalMiniBar.classList.remove('visible');
                 mainContent.classList.remove('hidden');
@@ -2969,7 +2968,6 @@
             }, 400);
             setTimeout(() => {
                 isLuckiMode = true;
-                document.body.classList.add('gallery-open');
                 mainContent.classList.add('hidden');
                 luckiGallery.classList.add('visible');
                 globalMiniBar.classList.add('visible');
@@ -2991,7 +2989,6 @@
             transitionBlack.style.height = '100vh';
             setTimeout(() => {
                 isLuckiMode = false;
-                document.body.classList.remove('gallery-open');
                 luckiGallery.classList.remove('visible');
                 globalMiniBar.classList.remove('visible');
                 mainContent.classList.remove('hidden');
@@ -3017,7 +3014,6 @@
             }, 400);
             setTimeout(() => {
                 isBassvictimMode = true;
-                document.body.classList.add('gallery-open');
                 mainContent.classList.add('hidden');
                 bassvictimGallery.classList.add('visible');
                 globalMiniBar.classList.add('visible');
@@ -3039,7 +3035,6 @@
             transitionBlack.style.height = '100vh';
             setTimeout(() => {
                 isBassvictimMode = false;
-                document.body.classList.remove('gallery-open');
                 bassvictimGallery.classList.remove('visible');
                 globalMiniBar.classList.remove('visible');
                 mainContent.classList.remove('hidden');
@@ -3379,25 +3374,6 @@
                 }
             }
         });
-        // === DEBUG OVERLAY (temporary) ===
-        const dbg = document.createElement('div');
-        dbg.style.cssText = 'position:fixed;top:0;left:0;background:rgba(0,0,0,0.8);color:#0f0;font:11px monospace;padding:8px;z-index:99999;max-width:50vw;pointer-events:none;';
-        document.body.appendChild(dbg);
-        let dbgLog = [];
-        function dbgAdd(msg) { dbgLog.unshift(msg); if (dbgLog.length > 8) dbgLog.pop(); }
-        setInterval(() => {
-            dbg.innerHTML = [
-                `vw:${window.innerWidth} isMobile:${isMobile}`,
-                `activeTrack:${activeTrack} hovered:${hoveredIndex}`,
-                `gyroReq:${gyroPermissionRequested} needsIOS:${needsIOSPermission}`,
-                `---`,
-                ...dbgLog
-            ].join('<br>');
-        }, 200);
-        // Log touch events on bar
-        gradientBar.addEventListener('touchstart', (e) => { dbgAdd('touchstart seg:' + e.target.dataset.track); });
-        gradientBar.addEventListener('touchend', () => { dbgAdd('touchend aT:' + activeTrack); });
-        gradientBar.addEventListener('click', () => { dbgAdd('click aT:' + activeTrack); });
     </script>
 </body>
 
