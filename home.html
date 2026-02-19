@@ -243,7 +243,7 @@
 
         .social-icons svg.shake {
             animation: shake 0.5s ease;
-            fill: #e91e1e !important;
+            fill: #e9c31e !important;
         }
 
         .current-track {
@@ -274,6 +274,10 @@
             opacity: 0;
             transition: opacity 0.5s;
             z-index: 200;
+        }
+
+        .esc-mobile {
+            display: none;
         }
 
         .dark-content.visible~.esc-hint {
@@ -646,6 +650,141 @@
             /* Show shadow when cube is clicked/active */
             .cube-wrapper.shadow-active .cube-shadow {
                 opacity: 1 !important;
+            }
+
+            /* Social icons */
+            .social-icons {
+                gap: 20px !important;
+                margin-top: 40px !important;
+            }
+
+            .social-icons svg {
+                width: 18px !important;
+                height: 18px !important;
+            }
+
+            /* Track info overlay */
+            .track-info-overlay .artist {
+                font-size: 32px !important;
+                letter-spacing: 4px !important;
+            }
+
+            .track-info-overlay .song {
+                font-size: 14px !important;
+                letter-spacing: 3px !important;
+            }
+
+            /* Current track label */
+            .current-track {
+                font-size: 11px !important;
+                letter-spacing: 3px !important;
+                bottom: 20px !important;
+                left: 20px !important;
+            }
+
+            /* ESC hint - change to tap hint on mobile */
+            .esc-hint {
+                font-size: 10px !important;
+                bottom: 20px !important;
+            }
+
+            .esc-desktop {
+                display: none !important;
+            }
+
+            .esc-mobile {
+                display: inline !important;
+            }
+
+            /* Global mini bar */
+            .global-mini-bar {
+                top: 12px !important;
+                right: 12px !important;
+                transform: scale(0.14) !important;
+            }
+
+            /* Gallery grids - all three */
+            .nuclear-grid-container,
+            .bassvictim-grid-container,
+            .lucki-grid-container {
+                padding: 60px 16px 40px !important;
+            }
+
+            .nuclear-grid,
+            .bassvictim-grid,
+            .lucki-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)) !important;
+                gap: 10px !important;
+            }
+
+            /* Gallery items */
+            .nuclear-item,
+            .bassvictim-item,
+            .lucki-item {
+                border-radius: 4px !important;
+            }
+
+            /* Glow effects - smaller on mobile */
+            .nuclear-glow,
+            .bassvictim-glow,
+            .lucki-glow {
+                width: 300px !important;
+                height: 300px !important;
+            }
+
+            /* Lightbox */
+            .nuclear-lightbox img {
+                max-width: 95vw !important;
+                max-height: 85vh !important;
+                border-radius: 4px !important;
+            }
+
+            .nuclear-lightbox-close {
+                top: 15px !important;
+                right: 15px !important;
+                width: 40px !important;
+                height: 40px !important;
+            }
+
+            /* Sphere view */
+            .sphere-container {
+                width: 320px !important;
+                height: 320px !important;
+            }
+
+            .icon-item {
+                width: 36px !important;
+                height: 36px !important;
+                margin-left: -18px !important;
+                margin-top: -18px !important;
+            }
+
+            .icon-inner svg {
+                width: 28px !important;
+                height: 28px !important;
+            }
+
+            .sphere-glow {
+                width: 300px !important;
+                height: 300px !important;
+            }
+
+            /* Menu icon */
+            .menu-icon {
+                top: 16px !important;
+                right: 16px !important;
+            }
+
+            /* Intro */
+            .intro-svg-container {
+                width: 90% !important;
+            }
+
+            /* Toast */
+            .toast {
+                bottom: 20px !important;
+                font-size: 11px !important;
+                padding: 10px 18px !important;
             }
         }
 
@@ -1120,7 +1259,7 @@
 
         .nuclear-item:hover {
             transform: scale(1.02);
-            box-shadow: 0 15px 50px rgba(233, 30, 30, 0.15);
+            box-shadow: 0 15px 50px rgba(233, 195, 30, 0.15);
             z-index: 10;
         }
 
@@ -1219,7 +1358,7 @@
             width: 500px;
             height: 500px;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(233, 30, 30, 0.06) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(233, 195, 30, 0.06) 0%, transparent 70%);
             pointer-events: none;
             left: 50%;
             top: 50%;
@@ -1276,7 +1415,7 @@
         }
 
         .nuclear-lightbox-close:hover {
-            background: rgba(233, 30, 30, 0.25);
+            background: rgba(233, 195, 30, 0.25);
             transform: rotate(90deg);
         }
 
@@ -1452,6 +1591,178 @@
             z-index: 0;
         }
 
+        /* Bassvictim Gallery View */
+        .bassvictim-gallery {
+            position: fixed;
+            inset: 0;
+            background: #0a0a0a;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 150;
+            transition: opacity 0.5s;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+        }
+
+        .bassvictim-gallery.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .bassvictim-grid-container {
+            padding: 80px 40px 60px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .bassvictim-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .bassvictim-item {
+            position: relative;
+            aspect-ratio: 16/9;
+            overflow: hidden;
+            border-radius: 6px;
+            background: #151515;
+            cursor: pointer;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s;
+        }
+
+        .bassvictim-item canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .bassvictim-item img {
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .bassvictim-item.loaded img {
+            opacity: 1;
+        }
+
+        .bassvictim-item.loaded canvas {
+            opacity: 0;
+        }
+
+        .bassvictim-item:hover {
+            transform: scale(1.02);
+            box-shadow: 0 15px 50px rgba(233, 30, 30, 0.2);
+            z-index: 10;
+        }
+
+        .bassvictim-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s;
+        }
+
+        .bassvictim-item:hover img {
+            transform: scale(1.08);
+        }
+
+        .bassvictim-item::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.6) 0%, transparent 40%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .bassvictim-item:hover::after {
+            opacity: 1;
+        }
+
+        .bassvictim-item .item-title {
+            display: none !important;
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            right: 12px;
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.85);
+            text-transform: uppercase;
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity 0.3s, transform 0.3s;
+            z-index: 2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .bassvictim-item:hover .item-title {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .bassvictim-item.loading {
+            background: linear-gradient(90deg, #151515 25%, #1a1a1a 50%, #151515 75%);
+            background-size: 200% 100%;
+            animation: bassvictimShimmer 1.5s infinite;
+        }
+
+        @keyframes bassvictimShimmer {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        .bassvictim-counter {
+            display: none !important;
+            position: fixed;
+            bottom: 25px;
+            right: 40px;
+            font-size: 11px;
+            letter-spacing: 3px;
+            color: rgba(255, 255, 255, 0.25);
+            z-index: 160;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .bassvictim-gallery.visible .bassvictim-counter {
+            opacity: 1;
+        }
+
+        .bassvictim-gallery.visible~.current-track {
+            opacity: 1;
+        }
+
+        .bassvictim-gallery.visible~.esc-hint {
+            opacity: 0.5;
+        }
+
+        .bassvictim-glow {
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(233, 30, 30, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 0;
+        }
+
         /* Godrays Viewer */
         .godrays-view {
             position: fixed;
@@ -1581,7 +1892,7 @@
     <div class="main-content" id="mainContent">
         <div class="container">
             <div class="gradient-bar" id="gradientBar">
-                <div class="bar-segment" data-index="0" data-track="0" data-color="#e91e1e">
+                <div class="bar-segment" data-index="0" data-track="0" data-color="#e9c31e">
                     <div class="texture"></div>
                 </div>
                 <div class="bar-segment" data-index="1" data-track="1" data-color="#4ecdc4">
@@ -1593,7 +1904,7 @@
                 <div class="bar-segment" data-index="3" data-track="3" data-color="#764ba2">
                     <div class="texture"></div>
                 </div>
-                <div class="bar-segment" data-index="4" data-track="4" data-color="#e91e9c">
+                <div class="bar-segment" data-index="4" data-track="4" data-color="#e91e1e">
                     <div class="texture"></div>
                 </div>
                 <div class="bar-segment" data-index="5" data-track="5" data-color="#ff9f43">
@@ -1656,11 +1967,11 @@
     <!-- Global Mini Bar (visible above everything) -->
     <div class="global-mini-bar" id="globalMiniBar">
         <div class="gradient-bar-mini" id="gradientBarMini">
-            <div class="bar-segment-mini" data-index="0" data-track="0" data-color="#e91e1e"></div>
+            <div class="bar-segment-mini" data-index="0" data-track="0" data-color="#e9c31e"></div>
             <div class="bar-segment-mini" data-index="1" data-track="1" data-color="#4ecdc4"></div>
             <div class="bar-segment-mini" data-index="2" data-track="2" data-color="#667eea"></div>
             <div class="bar-segment-mini" data-index="3" data-track="3" data-color="#764ba2"></div>
-            <div class="bar-segment-mini" data-index="4" data-track="4" data-color="#e91e9c"></div>
+            <div class="bar-segment-mini" data-index="4" data-track="4" data-color="#e91e1e"></div>
             <div class="bar-segment-mini" data-index="5" data-track="5" data-color="#ff9f43"></div>
             <div class="bar-segment-mini" data-index="6" data-track="6" data-color="#1dd1a1"></div>
             <div class="bar-segment-mini" data-index="7" data-track="7" data-color="#5f27cd"></div>
@@ -1680,6 +1991,17 @@
             </div>
         </div>
         <div class="nuclear-counter" id="nuclearCounter"></div>
+    </div>
+
+    <!-- Bassvictim Gallery -->
+    <div class="bassvictim-gallery" id="bassvictimGallery">
+        <div class="bassvictim-glow"></div>
+        <div class="bassvictim-grid-container">
+            <div class="bassvictim-grid" id="bassvictimGrid">
+                <!-- Images loaded by JS -->
+            </div>
+        </div>
+        <div class="bassvictim-counter" id="bassvictimCounter"></div>
     </div>
 
     <!-- Lucki Gallery -->
@@ -1710,7 +2032,7 @@
 
     <div class="orb" id="orb"></div>
     <div class="current-track" id="currentTrack"></div>
-    <div class="esc-hint">ESC to exit</div>
+    <div class="esc-hint"><span class="esc-desktop">ESC to exit</span><span class="esc-mobile">tap bar to go back</span></div>
 
     <button class="toggle-btn" id="toggleBtn">
         <svg viewBox="0 0 24 24">
@@ -1792,15 +2114,15 @@
         const globalMiniBar = document.getElementById('globalMiniBar');
 
         const totalSegments = 12;
-        const trackNames = ['NUCLEAR', 'WAVES', 'DRIFT', '33', 'WANT IT', 'ECHOES', 'PULSE', 'LUCKI', 'FLUX', 'HAZE', 'BLOOM', 'STATIC'];
+        const trackNames = ['NUCLEAR', 'WAVES', 'DRIFT', '33', 'BASSVICTIM', 'ECHOES', 'PULSE', 'LUCKI', 'FLUX', 'HAZE', 'BLOOM', 'STATIC'];
         const artistNames = ['SANNHET', 'FLYING LOTUS', 'TYCHO', 'BONOBO', 'MASSIVE ATTACK', 'BOARDS OF CANADA', 'APHEX TWIN', 'BURIAL', 'FOUR TET', 'CARIBOU', 'MODERAT', 'AMON TOBIN'];
 
         const grayColors = ['#c8c8c8', '#bcbcbc', '#afafaf', '#a2a2a2', '#959595', '#888888', '#7a7a7a', '#6d6d6d', '#5f5f5f', '#525252', '#3d3d3d', '#282828'];
 
         // Distinct colors across the spectrum for hover effect - each column has unique color
-        const hoverColors = ['#e91e1e', '#4ecdc4', '#667eea', '#764ba2', '#e91e9c', '#ff9f43', '#1dd1a1', '#5f27cd', '#00d2d3', '#ff6b81', '#7bed9f', '#a55eea'];
+        const hoverColors = ['#e9c31e', '#4ecdc4', '#667eea', '#764ba2', '#e91e1e', '#ff9f43', '#1dd1a1', '#5f27cd', '#00d2d3', '#ff6b81', '#7bed9f', '#a55eea'];
 
-        const trackColors = ['#e91e1e', '#4ecdc4', '#667eea', '#764ba2', '#e91e9c', '#ff9f43', '#1dd1a1', '#5f27cd', '#00d2d3', '#ff6b81', '#7bed9f', '#a55eea'];
+        const trackColors = ['#e9c31e', '#4ecdc4', '#667eea', '#764ba2', '#e91e1e', '#ff9f43', '#1dd1a1', '#5f27cd', '#00d2d3', '#ff6b81', '#7bed9f', '#a55eea'];
 
         // Create 3D cubes
         const cubeData = [];
@@ -1845,6 +2167,7 @@
         let isGridMode = false;
         let isSphereMode = false;
         let isNuclearMode = false;
+        let isBassvictimMode = false;
         let isLuckiMode = false;
         let isGodraysMode = false;
         let isTransitioning = false;
@@ -1980,6 +2303,9 @@
                 if (activeTrack === 0) {
                     // NUCLEAR track - show nuclear gallery
                     enterNuclearMode();
+                } else if (activeTrack === 4) {
+                    // BASSVICTIM track - show bassvictim gallery
+                    enterBassvictimMode();
                 } else if (activeTrack === 7) {
                     // LUCKI track - show lucki gallery
                     enterLuckiMode();
@@ -2440,7 +2766,8 @@
             'Untitled video - Made with Clipchamp (42).gif',
             'Untitled video - Made with Clipchamp (44).gif',
             'Untitled video - Made with Clipchamp (45).gif',
-            'Untitled video - Made with Clipchamp (46).gif'
+            'Untitled video - Made with Clipchamp (46).gif',
+            'Untitled video - Made with Clipchamp (55) (1).gif'
         ];
 
         function initLuckiGrid() {
@@ -2511,6 +2838,83 @@
             });
         }
         initLuckiGrid();
+
+        // ========== BASSVICTIM GALLERY ==========
+        const bassvictimGallery = document.getElementById('bassvictimGallery');
+        const bassvictimGrid = document.getElementById('bassvictimGrid');
+        const bassvictimCounter = document.getElementById('bassvictimCounter');
+
+        const bassvictimImages = [
+            'copy_BAA0AA19-788D-4923-9D58-44AB2CAD4584 (online-video-cutter.com) (1).gif',
+            'copy_BAA0AA19-788D-4923-9D58-44AB2CAD4584online-video-cutter.com-ezgif.com-optimize.gif',
+            'Untitled (1).gif',
+            'Untitled (2).gif',
+            'Untitled (4).gif',
+            'Untitled (5).gif',
+            'Untitled (6).gif'
+        ];
+
+        function initBassvictimGrid() {
+            bassvictimCounter.textContent = `${bassvictimImages.length} ITEMS`;
+            bassvictimImages.forEach((filename) => {
+                const item = document.createElement('div');
+                item.className = 'bassvictim-item loading';
+                let displayName = filename.replace('.gif', '');
+                const gifUrl = `bassvictim/${encodeURIComponent(filename)}`;
+                item.innerHTML = `<canvas></canvas><img data-src="${gifUrl}" alt="${displayName}"><span class="item-title">${displayName}</span>`;
+                const img = item.querySelector('img');
+                const canvas = item.querySelector('canvas');
+                const ctx = canvas.getContext('2d');
+
+                const previewImg = new Image();
+                previewImg.crossOrigin = 'anonymous';
+                previewImg.onload = () => {
+                    canvas.width = previewImg.naturalWidth;
+                    canvas.height = previewImg.naturalHeight;
+                    ctx.drawImage(previewImg, 0, 0);
+                    item.classList.remove('loading');
+                };
+                previewImg.onerror = () => { item.style.display = 'none'; };
+                previewImg.src = gifUrl;
+
+                item.addEventListener('mouseenter', () => {
+                    item.classList.add('loaded');
+                    img.src = img.dataset.src;
+                });
+
+                item.addEventListener('mouseleave', () => {
+                    img.removeAttribute('src');
+                    item.classList.remove('loaded');
+                });
+
+                let lastTap = 0;
+                item.addEventListener('touchend', (e) => {
+                    const now = Date.now();
+                    if (now - lastTap < 300) {
+                        nuclearLightboxImg.src = gifUrl;
+                        nuclearLightbox.classList.add('active');
+                        e.preventDefault();
+                    } else {
+                        if (item.classList.contains('loaded')) {
+                            img.removeAttribute('src');
+                            item.classList.remove('loaded');
+                        } else {
+                            item.classList.add('loaded');
+                            img.src = img.dataset.src;
+                        }
+                    }
+                    lastTap = now;
+                });
+
+                item.addEventListener('click', (e) => {
+                    if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
+                    nuclearLightboxImg.src = gifUrl;
+                    nuclearLightbox.classList.add('active');
+                });
+                bassvictimGrid.appendChild(item);
+            });
+        }
+        initBassvictimGrid();
 
         function enterNuclearMode() {
             isTransitioning = true;
@@ -2596,10 +3000,53 @@
             setTimeout(() => { isTransitioning = false; }, 1100);
         }
 
+        function enterBassvictimMode() {
+            isTransitioning = true;
+            gradientBar.classList.add('squishing');
+            setTimeout(() => {
+                transitionBlack.style.transition = 'height 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+                transitionBlack.style.height = '100vh';
+            }, 400);
+            setTimeout(() => {
+                isBassvictimMode = true;
+                mainContent.classList.add('hidden');
+                bassvictimGallery.classList.add('visible');
+                globalMiniBar.classList.add('visible');
+                editPanel.classList.add('dark-theme');
+                toggleBtn.classList.add('dark-theme');
+                menuIcon.style.opacity = '0';
+                gradientBar.classList.remove('squishing');
+                hoveredIndex = -1;
+                setTimeout(() => {
+                    transitionBlack.style.height = '0';
+                    isTransitioning = false;
+                }, 100);
+            }, 900);
+        }
+
+        function exitBassvictimMode() {
+            isTransitioning = true;
+            transitionBlack.style.transition = 'height 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+            transitionBlack.style.height = '100vh';
+            setTimeout(() => {
+                isBassvictimMode = false;
+                bassvictimGallery.classList.remove('visible');
+                globalMiniBar.classList.remove('visible');
+                mainContent.classList.remove('hidden');
+                editPanel.classList.remove('dark-theme');
+                toggleBtn.classList.remove('dark-theme');
+                menuIcon.style.opacity = '1';
+                activeTrack = null;
+            }, 500);
+            setTimeout(() => { transitionBlack.style.height = '0'; }, 600);
+            setTimeout(() => { isTransitioning = false; }, 1100);
+        }
+
         // Click on global mini bar to exit current mode
         globalMiniBar.addEventListener('click', () => {
             if (!isTransitioning) {
                 if (isNuclearMode) exitNuclearMode();
+                else if (isBassvictimMode) exitBassvictimMode();
                 else if (isLuckiMode) exitLuckiMode();
                 else if (isGodraysMode) exitGodraysMode();
                 else if (isDarkMode) exitDarkMode();
@@ -2900,6 +3347,8 @@
                     nuclearLightbox.classList.remove('active');
                 } else if (isNuclearMode && !isTransitioning) {
                     exitNuclearMode();
+                } else if (isBassvictimMode && !isTransitioning) {
+                    exitBassvictimMode();
                 } else if (isLuckiMode && !isTransitioning) {
                     exitLuckiMode();
                 } else if (isGodraysMode && !isTransitioning && menuState !== 3) {
