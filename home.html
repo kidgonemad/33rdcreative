@@ -551,29 +551,45 @@
 
         /* Mobile styles */
         @media (max-width: 768px) {
-            /* First page: vertical columns */
+            /* First page: vertical columns with tilt */
             .container {
                 width: 90vw !important;
                 height: auto !important;
-                max-width: 320px;
+                max-width: 340px;
+                perspective: 800px;
             }
 
             .gradient-bar {
                 flex-direction: column !important;
                 height: auto !important;
                 width: 100%;
+                transform: rotateX(4deg) rotateY(-2deg);
+                transform-style: preserve-3d;
             }
 
             .bar-segment {
                 width: 100% !important;
-                height: 50px !important;
-                margin: 4px 0 !important;
-                border-radius: 3px !important;
+                height: 44px !important;
+                margin: 0 !important;
+                border-radius: 0 !important;
+            }
+
+            .bar-segment:first-child {
+                border-radius: 4px 4px 0 0 !important;
+            }
+
+            .bar-segment:last-child {
+                border-radius: 0 0 4px 4px !important;
             }
 
             .bar-segment .track-title {
                 font-size: 14px !important;
                 letter-spacing: 3px !important;
+            }
+
+            /* Hide social icons on mobile */
+            .social-icons {
+                display: none !important;
             }
 
             /* Grid: vertical layout */
@@ -2193,11 +2209,18 @@
         const targetWidthsMini = new Array(totalSegments).fill(params.barWidth);
         const targetHeightsMini = new Array(totalSegments).fill(params.baseHeight);
 
+        const isMobile = window.matchMedia('(max-width: 768px)').matches;
+
         function initSegments() {
             segments.forEach((seg, i) => {
                 seg.style.background = grayColors[i];
-                seg.style.height = params.baseHeight + 'px';
-                seg.style.width = params.barWidth + 'px';
+                if (isMobile) {
+                    seg.style.width = '100%';
+                    seg.style.height = '44px';
+                } else {
+                    seg.style.height = params.baseHeight + 'px';
+                    seg.style.width = params.barWidth + 'px';
+                }
             });
             segmentsMini.forEach((seg, i) => {
                 seg.style.background = grayColors[i];
@@ -2224,35 +2247,64 @@
 
         function animate() {
             if (!isDarkMode && !isGridMode) {
-                for (let i = 0; i < totalSegments; i++) {
-                    if (hoveredIndex === -1) {
-                        targetWidths[i] = params.barWidth;
-                        targetHeights[i] = params.baseHeight;
-                    } else if (i === hoveredIndex) {
-                        targetWidths[i] = params.expandSize;
-                        targetHeights[i] = params.expandSize;
-                    } else {
-                        targetWidths[i] = params.barWidth;
-                        const d = Math.abs(i - hoveredIndex);
-                        targetHeights[i] = Math.max(params.minHeight, params.expandSize - (d * params.falloff));
+                if (isMobile) {
+                    // Mobile: width stays 100%, only height and color animate
+                    for (let i = 0; i < totalSegments; i++) {
+                        if (hoveredIndex === -1) {
+                            targetHeights[i] = 44;
+                        } else if (i === hoveredIndex) {
+                            targetHeights[i] = 70;
+                        } else {
+                            const d = Math.abs(i - hoveredIndex);
+                            targetHeights[i] = Math.max(32, 70 - (d * 8));
+                        }
                     }
+
+                    segments.forEach((seg, i) => {
+                        currentHeights[i] += (targetHeights[i] - currentHeights[i]) * params.smoothing;
+                        seg.style.height = currentHeights[i] + 'px';
+                        seg.classList.toggle('expanded', currentHeights[i] > 55);
+
+                        if (hoveredIndex !== -1) {
+                            const d = Math.abs(i - hoveredIndex);
+                            const blend = Math.max(0, 1 - (d * params.colorBlend));
+                            seg.style.background = blendColors(grayColors[i], hoverColors[i], blend);
+                        } else {
+                            seg.style.background = grayColors[i];
+                        }
+                    });
+                } else {
+                    // Desktop: normal behavior
+                    for (let i = 0; i < totalSegments; i++) {
+                        if (hoveredIndex === -1) {
+                            targetWidths[i] = params.barWidth;
+                            targetHeights[i] = params.baseHeight;
+                        } else if (i === hoveredIndex) {
+                            targetWidths[i] = params.expandSize;
+                            targetHeights[i] = params.expandSize;
+                        } else {
+                            targetWidths[i] = params.barWidth;
+                            const d = Math.abs(i - hoveredIndex);
+                            targetHeights[i] = Math.max(params.minHeight, params.expandSize - (d * params.falloff));
+                        }
+                    }
+
+                    segments.forEach((seg, i) => {
+                        currentWidths[i] += (targetWidths[i] - currentWidths[i]) * params.smoothing;
+                        currentHeights[i] += (targetHeights[i] - currentHeights[i]) * params.smoothing;
+                        seg.style.width = currentWidths[i] + 'px';
+                        seg.style.height = currentHeights[i] + 'px';
+                        seg.classList.toggle('expanded', currentWidths[i] > params.barWidth + 50);
+
+                        if (hoveredIndex !== -1) {
+                            const d = Math.abs(i - hoveredIndex);
+                            const blend = Math.max(0, 1 - (d * params.colorBlend));
+                            seg.style.background = blendColors(grayColors[i], hoverColors[i], blend);
+                        } else {
+                            seg.style.background = grayColors[i];
+                        }
+                    });
                 }
-
-                segments.forEach((seg, i) => {
-                    currentWidths[i] += (targetWidths[i] - currentWidths[i]) * params.smoothing;
-                    currentHeights[i] += (targetHeights[i] - currentHeights[i]) * params.smoothing;
-                    seg.style.width = currentWidths[i] + 'px';
-                    seg.style.height = currentHeights[i] + 'px';
-                    seg.classList.toggle('expanded', currentWidths[i] > params.barWidth + 50);
-
-                    if (hoveredIndex !== -1) {
-                        const d = Math.abs(i - hoveredIndex);
-                        const blend = Math.max(0, 1 - (d * params.colorBlend));
-                        seg.style.background = blendColors(grayColors[i], hoverColors[i], blend);
-                    } else {
-                        seg.style.background = grayColors[i];
-                    }
-                });
             }
 
             for (let i = 0; i < totalSegments; i++) {
@@ -2307,6 +2359,55 @@
             hoveredIndex = -1;
             activeTrack = null;
         });
+
+        // Mobile touch: tap to select, second tap to enter
+        if (isMobile) {
+            let mobileTiltX = 0, mobileTiltY = 0;
+            let targetTiltX = 4, targetTiltY = -2;
+
+            segments.forEach((seg, i) => {
+                seg.addEventListener('touchstart', (e) => {
+                    if (isTransitioning || isDarkMode || isGridMode) return;
+                    const t = parseInt(seg.dataset.track);
+
+                    // Tilt toward the tapped segment
+                    const ratio = i / (totalSegments - 1); // 0 at top, 1 at bottom
+                    targetTiltX = 8 - (ratio * 16); // tilt forward at top, back at bottom
+                    targetTiltY = -2;
+
+                    if (hoveredIndex === i) {
+                        // Second tap on same bar - trigger click action
+                        activeTrack = t;
+                    } else {
+                        // First tap - select this bar
+                        hoveredIndex = i;
+                        activeTrack = t;
+                        orb.style.background = seg.dataset.color;
+                        currentTrackLabel.textContent = trackNames[t];
+                        currentTrackLabel.style.color = seg.dataset.color;
+                    }
+                });
+            });
+
+            // Animate tilt
+            function animateMobileTilt() {
+                mobileTiltX += (targetTiltX - mobileTiltX) * 0.08;
+                mobileTiltY += (targetTiltY - mobileTiltY) * 0.08;
+                gradientBar.style.transform = `rotateX(${mobileTiltX}deg) rotateY(${mobileTiltY}deg)`;
+                requestAnimationFrame(animateMobileTilt);
+            }
+            animateMobileTilt();
+
+            // Reset tilt and selection when tapping outside
+            document.addEventListener('touchstart', (e) => {
+                if (!gradientBar.contains(e.target)) {
+                    hoveredIndex = -1;
+                    activeTrack = null;
+                    targetTiltX = 4;
+                    targetTiltY = -2;
+                }
+            });
+        }
 
         gradientBar.addEventListener('click', () => {
             if (activeTrack !== null && !isTransitioning && !isDarkMode && !isGridMode) {
