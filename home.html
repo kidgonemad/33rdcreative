@@ -26,10 +26,7 @@
         }
 
         body.gallery-open {
-            overflow: auto !important;
-            position: relative;
-            width: 100%;
-            min-height: 100vh;
+            overflow: hidden !important;
         }
 
         .transition-overlay {
@@ -599,17 +596,16 @@
                 display: none !important;
             }
 
-            /* Show current track label above bar on mobile */
+            /* Current track label - fixed top center on mobile */
             .current-track {
-                opacity: 1 !important;
-                top: auto !important;
+                position: fixed !important;
+                top: 20px !important;
+                left: 50% !important;
                 bottom: auto !important;
-                position: relative !important;
+                transform: translateX(-50%) !important;
                 text-align: center !important;
-                margin-bottom: 16px !important;
-                font-size: 12px !important;
-                letter-spacing: 4px !important;
-                min-height: 20px;
+                font-size: 11px !important;
+                letter-spacing: 3px !important;
             }
 
             /* Grid: vertical layout */
@@ -710,13 +706,7 @@
                 letter-spacing: 3px !important;
             }
 
-            /* Current track label */
-            .current-track {
-                font-size: 11px !important;
-                letter-spacing: 3px !important;
-                bottom: 20px !important;
-                left: 20px !important;
-            }
+            /* Current track label - already set above */
 
             /* ESC hint - change to tap hint on mobile */
             .esc-hint {
@@ -743,13 +733,15 @@
             .nuclear-gallery,
             .bassvictim-gallery,
             .lucki-gallery {
-                position: absolute !important;
+                position: fixed !important;
                 top: 0 !important;
                 left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
                 width: 100% !important;
-                min-height: 100vh !important;
-                height: auto !important;
-                overflow-y: visible !important;
+                height: 100% !important;
+                overflow-y: auto !important;
+                -webkit-overflow-scrolling: touch !important;
             }
 
             /* Gallery grids - all three */
@@ -2360,18 +2352,17 @@
                 });
             }
 
-            // iOS 13+ requires permission via user gesture (click, not just touch)
+            // iOS 13+ requires permission via user gesture
+            // Request on first tap on the bar - Safari will show its native permission dialog
+            let gyroPermissionRequested = false;
             if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-                // Show a one-time enable button for iOS
-                const gyroBtn = document.createElement('button');
-                gyroBtn.textContent = 'ENABLE TILT';
-                gyroBtn.style.cssText = 'position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:9999;background:#222;color:#fff;border:none;padding:10px 24px;border-radius:20px;font-family:inherit;font-size:11px;letter-spacing:3px;cursor:pointer;opacity:0.7;';
-                document.body.appendChild(gyroBtn);
-                gyroBtn.addEventListener('click', () => {
+                gradientBar.addEventListener('touchstart', function requestGyroOnce() {
+                    if (gyroPermissionRequested) return;
+                    gyroPermissionRequested = true;
                     DeviceOrientationEvent.requestPermission().then(state => {
                         if (state === 'granted') startGyro();
                     }).catch(() => {});
-                    gyroBtn.remove();
+                    gradientBar.removeEventListener('touchstart', requestGyroOnce);
                 });
             } else {
                 // Android and older iOS - just start
@@ -2836,14 +2827,11 @@
                 const mp4Url = `${folder}/${encodeURIComponent(filename.replace('.gif', '.mp4'))}`;
                 const gifUrl = `${folder}/${encodeURIComponent(filename)}`;
 
-                item.innerHTML = `<video src="${mp4Url}" loop muted playsinline preload="metadata"></video><span class="item-title">${displayName}</span>`;
+                item.innerHTML = `<video src="${mp4Url}" loop muted playsinline preload="auto"></video><span class="item-title">${displayName}</span>`;
                 const video = item.querySelector('video');
 
                 video.addEventListener('loadeddata', () => {
                     item.classList.remove('loading');
-                    if (isMobile) {
-                        video.play().catch(() => {});
-                    }
                 });
                 video.addEventListener('error', () => {
                     // Fallback to GIF if MP4 fails
@@ -2873,7 +2861,7 @@
                 grid.appendChild(item);
             });
         }
-        initGalleryGrid(nuclearImages, nuclearGrid, nuclearCounter, 'nuclear', 'nuclear-item');
+        let nuclearLoaded = false;
 
         // ========== LUCKI GALLERY ==========
         const luckiGallery = document.getElementById('luckiGallery');
@@ -2897,7 +2885,7 @@
             'Untitled video - Made with Clipchamp (55) (1).gif'
         ];
 
-        initGalleryGrid(luckiImages, luckiGrid, luckiCounter, 'lucki', 'lucki-item');
+        let luckiLoaded = false;
 
         // ========== BASSVICTIM GALLERY ==========
         const bassvictimGallery = document.getElementById('bassvictimGallery');
@@ -2914,9 +2902,13 @@
             'Untitled (6).gif'
         ];
 
-        initGalleryGrid(bassvictimImages, bassvictimGrid, bassvictimCounter, 'bassvictim', 'bassvictim-item');
+        let bassvictimLoaded = false;
 
         function enterNuclearMode() {
+            if (!nuclearLoaded) {
+                nuclearLoaded = true;
+                initGalleryGrid(nuclearImages, nuclearGrid, nuclearCounter, 'nuclear', 'nuclear-item');
+            }
             isTransitioning = true;
             gradientBar.classList.add('squishing');
             setTimeout(() => {
@@ -2961,6 +2953,10 @@
         }
 
         function enterLuckiMode() {
+            if (!luckiLoaded) {
+                luckiLoaded = true;
+                initGalleryGrid(luckiImages, luckiGrid, luckiCounter, 'lucki', 'lucki-item');
+            }
             isTransitioning = true;
             gradientBar.classList.add('squishing');
             setTimeout(() => {
@@ -3005,6 +3001,10 @@
         }
 
         function enterBassvictimMode() {
+            if (!bassvictimLoaded) {
+                bassvictimLoaded = true;
+                initGalleryGrid(bassvictimImages, bassvictimGrid, bassvictimCounter, 'bassvictim', 'bassvictim-item');
+            }
             isTransitioning = true;
             gradientBar.classList.add('squishing');
             setTimeout(() => {
