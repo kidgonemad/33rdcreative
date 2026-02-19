@@ -599,6 +599,19 @@
                 display: none !important;
             }
 
+            /* Show current track label above bar on mobile */
+            .current-track {
+                opacity: 1 !important;
+                top: auto !important;
+                bottom: auto !important;
+                position: relative !important;
+                text-align: center !important;
+                margin-bottom: 16px !important;
+                font-size: 12px !important;
+                letter-spacing: 4px !important;
+                min-height: 20px;
+            }
+
             /* Grid: vertical layout */
             .grid-scene {
                 transform: rotateX(8deg) rotateY(-5deg);
@@ -2380,36 +2393,82 @@
             activeTrack = null;
         });
 
-        // Mobile touch: tap to select, second tap to enter
+        // Mobile: gyroscope tilt to hover over bars, tap to enter
         if (isMobile) {
             let mobileTiltX = 0, mobileTiltY = 0;
             let targetTiltX = 4, targetTiltY = -2;
+            let gyroActive = false;
+            let gyroBeta = 0, gyroGamma = 0;
+            // Calibration: store the initial beta when gyro starts
+            let betaOffset = null;
 
-            segments.forEach((seg, i) => {
-                seg.addEventListener('touchstart', (e) => {
-                    if (isTransitioning || isDarkMode || isGridMode) return;
-                    const t = parseInt(seg.dataset.track);
+            function startGyro() {
+                if (gyroActive) return;
+                gyroActive = true;
 
-                    // Tilt toward the tapped segment
-                    const ratio = i / (totalSegments - 1); // 0 at top, 1 at bottom
-                    targetTiltX = 8 - (ratio * 16); // tilt forward at top, back at bottom
-                    targetTiltY = -2;
-
-                    if (hoveredIndex === i) {
-                        // Second tap on same bar - trigger click action
-                        activeTrack = t;
-                    } else {
-                        // First tap - select this bar
-                        hoveredIndex = i;
-                        activeTrack = t;
-                        orb.style.background = seg.dataset.color;
-                        currentTrackLabel.textContent = trackNames[t];
-                        currentTrackLabel.style.color = seg.dataset.color;
-                    }
+                window.addEventListener('deviceorientation', (e) => {
+                    if (e.beta === null) return;
+                    // Calibrate on first reading - phone's current angle is "neutral"
+                    if (betaOffset === null) betaOffset = e.beta;
+                    gyroBeta = e.beta - betaOffset; // forward/back tilt relative to start
+                    gyroGamma = e.gamma || 0;       // left/right tilt
                 });
-            });
+            }
 
-            // Animate tilt
+            // iOS 13+ requires permission
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                // Need user gesture to request permission - do it on first tap
+                document.addEventListener('touchstart', function gyroPermission() {
+                    DeviceOrientationEvent.requestPermission().then(state => {
+                        if (state === 'granted') startGyro();
+                    }).catch(() => {});
+                    document.removeEventListener('touchstart', gyroPermission);
+                }, { once: true });
+            } else {
+                // Android and older iOS - just start
+                startGyro();
+            }
+
+            // Map gyro tilt to bar selection + visual tilt
+            function updateGyroSelection() {
+                if (!gyroActive || isDarkMode || isGridMode || isTransitioning) {
+                    requestAnimationFrame(updateGyroSelection);
+                    return;
+                }
+                if (isNuclearMode || isBassvictimMode || isLuckiMode || isGodraysMode) {
+                    requestAnimationFrame(updateGyroSelection);
+                    return;
+                }
+
+                // Map beta (forward/back) to bar index
+                // Tilt forward (negative beta) = top bars, tilt back (positive) = bottom bars
+                // Range: -20 to +20 degrees maps to bars 0-11
+                const clampedBeta = Math.max(-20, Math.min(20, gyroBeta));
+                const barIndex = Math.round(((clampedBeta + 20) / 40) * (totalSegments - 1));
+                const safeIndex = Math.max(0, Math.min(totalSegments - 1, barIndex));
+
+                // Update hovered bar
+                if (hoveredIndex !== safeIndex) {
+                    hoveredIndex = safeIndex;
+                    const t = parseInt(segments[safeIndex].dataset.track);
+                    activeTrack = t;
+                    orb.style.background = segments[safeIndex].dataset.color;
+                    currentTrackLabel.textContent = trackNames[t];
+                    currentTrackLabel.style.color = segments[safeIndex].dataset.color;
+                }
+
+                // Map gamma (left/right tilt) to visual Y rotation
+                const clampedGamma = Math.max(-30, Math.min(30, gyroGamma));
+                targetTiltY = (clampedGamma / 30) * 8;
+
+                // Map beta to visual X rotation
+                targetTiltX = -(clampedBeta / 20) * 6;
+
+                requestAnimationFrame(updateGyroSelection);
+            }
+            updateGyroSelection();
+
+            // Animate the 3D tilt smoothly
             function animateMobileTilt() {
                 mobileTiltX += (targetTiltX - mobileTiltX) * 0.08;
                 mobileTiltY += (targetTiltY - mobileTiltY) * 0.08;
@@ -2418,13 +2477,22 @@
             }
             animateMobileTilt();
 
-            // Reset tilt and selection when tapping outside
+            // Tap anywhere on bar to enter the currently selected track
+            gradientBar.addEventListener('touchend', (e) => {
+                if (activeTrack === null || isTransitioning || isDarkMode || isGridMode) return;
+                e.preventDefault();
+            });
+
+            // Recalibrate on double tap outside bar
+            let lastOutsideTap = 0;
             document.addEventListener('touchstart', (e) => {
                 if (!gradientBar.contains(e.target)) {
-                    hoveredIndex = -1;
-                    activeTrack = null;
-                    targetTiltX = 4;
-                    targetTiltY = -2;
+                    const now = Date.now();
+                    if (now - lastOutsideTap < 300) {
+                        // Double tap outside - recalibrate gyro neutral
+                        betaOffset = null;
+                    }
+                    lastOutsideTap = now;
                 }
             });
         }
