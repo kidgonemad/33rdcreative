@@ -2230,21 +2230,22 @@
         function animate() {
             if (!isDarkMode && !isGridMode) {
                 if (isMobile) {
-                    // Mobile: dramatic height wave matching desktop feel
+                    // Mobile: square expansion matching desktop
                     for (let i = 0; i < totalSegments; i++) {
                         if (hoveredIndex === -1) {
                             targetHeights[i] = 44;
                         } else if (i === hoveredIndex) {
-                            targetHeights[i] = 90;
+                            targetHeights[i] = params.expandSize;
                         } else {
                             const d = Math.abs(i - hoveredIndex);
-                            targetHeights[i] = Math.max(30, 90 - (d * 18));
+                            targetHeights[i] = Math.max(44, 70 - (d * 10));
                         }
                     }
 
                     segments.forEach((seg, i) => {
                         currentHeights[i] += (targetHeights[i] - currentHeights[i]) * params.smoothing;
                         seg.style.height = currentHeights[i] + 'px';
+                        seg.classList.toggle('expanded', currentHeights[i] > 100);
 
                         if (hoveredIndex !== -1) {
                             const d = Math.abs(i - hoveredIndex);
