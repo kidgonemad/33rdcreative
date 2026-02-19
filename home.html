@@ -2403,7 +2403,8 @@
 
                 const clampedGamma = Math.max(-30, Math.min(30, gyroGamma));
                 targetTiltY = (clampedGamma / 30) * 8;
-                targetTiltX = -(clampedBeta / 20) * 6;
+                const clampedBetaVis = Math.max(-20, Math.min(20, gyroBeta));
+                targetTiltX = -(clampedBetaVis / 20) * 6;
 
                 requestAnimationFrame(updateGyroSelection);
             }
