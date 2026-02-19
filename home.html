@@ -601,7 +601,6 @@
                 top: auto !important;
                 font-size: 11px !important;
                 letter-spacing: 3px !important;
-                opacity: 1 !important;
             }
 
             /* Grid: vertical layout */
@@ -1584,6 +1583,14 @@
             opacity: 1;
         }
 
+        .lucki-gallery.visible~.current-track {
+            opacity: 1;
+        }
+
+        .lucki-gallery.visible~.esc-hint {
+            opacity: 0.5;
+        }
+
         .lucki-glow {
             position: fixed;
             width: 500px;
@@ -2315,8 +2322,6 @@
                 const t = parseInt(seg.dataset.track);
                 activeTrack = t;
                 orb.style.background = seg.dataset.color;
-                currentTrackLabel.textContent = trackNames[t];
-                currentTrackLabel.style.color = seg.dataset.color;
             });
             // Mobile: touchstart sets activeTrack directly (mouseenter/leave order is unreliable on touch)
             seg.addEventListener('touchstart', (e) => {
@@ -2325,8 +2330,6 @@
                 const t = parseInt(seg.dataset.track);
                 activeTrack = t;
                 orb.style.background = seg.dataset.color;
-                currentTrackLabel.textContent = trackNames[t];
-                currentTrackLabel.style.color = seg.dataset.color;
             });
         });
 
@@ -2377,7 +2380,6 @@
                     if (hoveredIndex !== -1) {
                         hoveredIndex = -1;
                         activeTrack = null;
-                        currentTrackLabel.textContent = '';
                     }
                 } else {
                     // Map tilt outside dead zone to bar index
@@ -2396,8 +2398,6 @@
                         const t = parseInt(segments[safeIndex].dataset.track);
                         activeTrack = t;
                         orb.style.background = segments[safeIndex].dataset.color;
-                        currentTrackLabel.textContent = trackNames[t];
-                        currentTrackLabel.style.color = segments[safeIndex].dataset.color;
                     }
                 }
 
@@ -2491,8 +2491,6 @@
                 const t = parseInt(seg.dataset.track);
                 activeTrack = t;
                 orb.style.background = seg.dataset.color;
-                currentTrackLabel.textContent = trackNames[t];
-                currentTrackLabel.style.color = seg.dataset.color;
             });
         });
 
@@ -2917,6 +2915,8 @@
                 nuclearLoaded = true;
                 initGalleryGrid(nuclearImages, nuclearGrid, nuclearCounter, 'nuclear', 'nuclear-item');
             }
+            currentTrackLabel.textContent = 'NUCLEAR';
+            currentTrackLabel.style.color = segments[0].dataset.color;
             isTransitioning = true;
             gradientBar.classList.add('squishing');
             setTimeout(() => {
@@ -2963,6 +2963,8 @@
                 luckiLoaded = true;
                 initGalleryGrid(luckiImages, luckiGrid, luckiCounter, 'lucki', 'lucki-item');
             }
+            currentTrackLabel.textContent = 'LUCKI';
+            currentTrackLabel.style.color = segments[7].dataset.color;
             isTransitioning = true;
             gradientBar.classList.add('squishing');
             setTimeout(() => {
@@ -3009,6 +3011,8 @@
                 bassvictimLoaded = true;
                 initGalleryGrid(bassvictimImages, bassvictimGrid, bassvictimCounter, 'bassvictim', 'bassvictim-item');
             }
+            currentTrackLabel.textContent = 'BASSVICTIM';
+            currentTrackLabel.style.color = segments[4].dataset.color;
             isTransitioning = true;
             gradientBar.classList.add('squishing');
             setTimeout(() => {
