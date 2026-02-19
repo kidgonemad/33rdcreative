@@ -2405,10 +2405,18 @@
             }
             animateMobileTilt();
 
-            // Tap anywhere on bar to enter the currently selected track
+            // Tap anywhere on bar: first tap requests gyro permission, after that enters track
             gradientBar.addEventListener('touchend', (e) => {
-                if (activeTrack === null || isTransitioning || isDarkMode || isGridMode) return;
                 e.preventDefault();
+                // iOS: first tap triggers Safari's native motion permission dialog
+                if (needsIOSPermission && !gyroPermissionRequested) {
+                    gyroPermissionRequested = true;
+                    DeviceOrientationEvent.requestPermission().then(state => {
+                        if (state === 'granted') startGyro();
+                    }).catch(() => {});
+                    return; // don't enter a gallery on the permission tap
+                }
+                if (activeTrack === null || isTransitioning || isDarkMode || isGridMode) return;
             });
 
             // Recalibrate on double tap outside bar
@@ -2426,13 +2434,6 @@
         }
 
         gradientBar.addEventListener('click', () => {
-            // iOS: request gyro permission on first click (Safari shows native dialog)
-            if (isMobile && needsIOSPermission && !gyroPermissionRequested) {
-                gyroPermissionRequested = true;
-                DeviceOrientationEvent.requestPermission().then(state => {
-                    if (state === 'granted') startGyro();
-                }).catch(() => {});
-            }
             if (activeTrack !== null && !isTransitioning && !isDarkMode && !isGridMode) {
                 if (activeTrack === 0) {
                     // NUCLEAR track - show nuclear gallery
