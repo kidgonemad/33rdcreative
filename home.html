@@ -2336,6 +2336,97 @@
             activeTrack = null;
         });
 
+        // Mobile: gyroscope tilt to browse bars
+        if (isMobile) {
+            let mobileTiltX = 0, mobileTiltY = 0;
+            let targetTiltX = 4, targetTiltY = -2;
+            let gyroActive = false;
+            let gyroBeta = 0, gyroGamma = 0;
+            let betaOffset = null;
+
+            function startGyro() {
+                if (gyroActive) return;
+                gyroActive = true;
+                window.addEventListener('deviceorientation', (e) => {
+                    if (e.beta === null) return;
+                    if (betaOffset === null) betaOffset = e.beta;
+                    gyroBeta = e.beta - betaOffset;
+                    gyroGamma = e.gamma || 0;
+                });
+            }
+
+            // On Android / non-iOS, gyro doesn't need permission
+            const needsPermission = typeof DeviceOrientationEvent !== 'undefined'
+                && typeof DeviceOrientationEvent.requestPermission === 'function';
+
+            if (!needsPermission) {
+                startGyro();
+            }
+
+            // Map gyro tilt to bar selection + visual tilt
+            function updateGyroSelection() {
+                if (!gyroActive || isDarkMode || isGridMode || isTransitioning
+                    || isNuclearMode || isBassvictimMode || isLuckiMode || isGodraysMode) {
+                    requestAnimationFrame(updateGyroSelection);
+                    return;
+                }
+
+                const clampedBeta = Math.max(-20, Math.min(20, gyroBeta));
+                const barIndex = Math.round(((clampedBeta + 20) / 40) * (totalSegments - 1));
+                const safeIndex = Math.max(0, Math.min(totalSegments - 1, barIndex));
+
+                if (hoveredIndex !== safeIndex) {
+                    hoveredIndex = safeIndex;
+                    const t = parseInt(segments[safeIndex].dataset.track);
+                    activeTrack = t;
+                    orb.style.background = segments[safeIndex].dataset.color;
+                    currentTrackLabel.textContent = trackNames[t];
+                    currentTrackLabel.style.color = segments[safeIndex].dataset.color;
+                }
+
+                const clampedGamma = Math.max(-30, Math.min(30, gyroGamma));
+                targetTiltY = (clampedGamma / 30) * 8;
+                targetTiltX = -(clampedBeta / 20) * 6;
+
+                requestAnimationFrame(updateGyroSelection);
+            }
+            updateGyroSelection();
+
+            // Smooth 3D tilt animation
+            function animateMobileTilt() {
+                mobileTiltX += (targetTiltX - mobileTiltX) * 0.08;
+                mobileTiltY += (targetTiltY - mobileTiltY) * 0.08;
+                gradientBar.style.transform = `rotateX(${mobileTiltX}deg) rotateY(${mobileTiltY}deg)`;
+                requestAnimationFrame(animateMobileTilt);
+            }
+            animateMobileTilt();
+
+            // iOS: first tap requests gyro permission, blocks gallery open
+            if (needsPermission) {
+                let permissionRequested = false;
+                gradientBar.addEventListener('touchend', (e) => {
+                    if (!permissionRequested) {
+                        permissionRequested = true;
+                        e.preventDefault();
+                        e.stopImmediatePropagation();
+                        DeviceOrientationEvent.requestPermission().then(state => {
+                            if (state === 'granted') startGyro();
+                        }).catch(() => {});
+                        return;
+                    }
+                });
+            }
+
+            // Double tap outside bar to recalibrate
+            let lastOutsideTap = 0;
+            document.addEventListener('touchstart', (e) => {
+                if (!gradientBar.contains(e.target)) {
+                    const now = Date.now();
+                    if (now - lastOutsideTap < 300) betaOffset = null;
+                    lastOutsideTap = now;
+                }
+            });
+        }
 
         gradientBar.addEventListener('click', () => {
             if (activeTrack !== null && !isTransitioning && !isDarkMode && !isGridMode) {
