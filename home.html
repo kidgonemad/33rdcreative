@@ -2229,15 +2229,15 @@
         function animate() {
             if (!isDarkMode && !isGridMode) {
                 if (isMobile) {
-                    // Mobile: subtle height wave + color on gyro/touch
+                    // Mobile: dramatic height wave matching desktop feel
                     for (let i = 0; i < totalSegments; i++) {
                         if (hoveredIndex === -1) {
                             targetHeights[i] = 44;
                         } else if (i === hoveredIndex) {
-                            targetHeights[i] = 54;
+                            targetHeights[i] = 90;
                         } else {
                             const d = Math.abs(i - hoveredIndex);
-                            targetHeights[i] = Math.max(38, 54 - (d * 4));
+                            targetHeights[i] = Math.max(30, 90 - (d * 18));
                         }
                     }
 
