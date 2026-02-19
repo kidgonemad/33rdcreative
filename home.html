@@ -3379,6 +3379,25 @@
                 }
             }
         });
+        // === DEBUG OVERLAY (temporary) ===
+        const dbg = document.createElement('div');
+        dbg.style.cssText = 'position:fixed;top:0;left:0;background:rgba(0,0,0,0.8);color:#0f0;font:11px monospace;padding:8px;z-index:99999;max-width:50vw;pointer-events:none;';
+        document.body.appendChild(dbg);
+        let dbgLog = [];
+        function dbgAdd(msg) { dbgLog.unshift(msg); if (dbgLog.length > 8) dbgLog.pop(); }
+        setInterval(() => {
+            dbg.innerHTML = [
+                `vw:${window.innerWidth} isMobile:${isMobile}`,
+                `activeTrack:${activeTrack} hovered:${hoveredIndex}`,
+                `gyroReq:${gyroPermissionRequested} needsIOS:${needsIOSPermission}`,
+                `---`,
+                ...dbgLog
+            ].join('<br>');
+        }, 200);
+        // Log touch events on bar
+        gradientBar.addEventListener('touchstart', (e) => { dbgAdd('touchstart seg:' + e.target.dataset.track); });
+        gradientBar.addEventListener('touchend', () => { dbgAdd('touchend aT:' + activeTrack); });
+        gradientBar.addEventListener('click', () => { dbgAdd('click aT:' + activeTrack); });
     </script>
 </body>
 
