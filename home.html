@@ -2173,6 +2173,7 @@
         let isLuckiMode = false;
         let isGodraysMode = false;
         let isTransitioning = false;
+        let gyroPaused = false;
         let menuState = 0; // 0 = lines, 1 = grid, 2 = sphere, 3 = godrays/33
 
         const currentWidths = new Array(totalSegments).fill(params.barWidth);
@@ -2330,13 +2331,12 @@
                 activeTrack = t;
                 orb.style.background = seg.dataset.color;
             });
-            // Mobile: touchstart sets activeTrack directly, pauses gyro so it can't override
+            // Mobile: touchstart sets activeTrack + pauses gyro
             seg.addEventListener('touchstart', (e) => {
                 if (isTransitioning || isDarkMode || isGridMode) return;
-                if (typeof gyroPaused !== 'undefined') {
-                    gyroPaused = true;
-                    setTimeout(() => { gyroPaused = false; }, 400);
-                }
+                gyroPaused = true;
+                clearTimeout(seg._gyroTimer);
+                seg._gyroTimer = setTimeout(() => { gyroPaused = false; }, 500);
                 hoveredIndex = i;
                 const t = parseInt(seg.dataset.track);
                 activeTrack = t;
@@ -2357,7 +2357,6 @@
             let gyroActive = false;
             let gyroBeta = 0, gyroGamma = 0;
             let betaOffset = null;
-            let gyroPaused = false;
 
             function startGyro() {
                 if (gyroActive) return;
@@ -2458,16 +2457,13 @@
             });
         }
 
-        gradientBar.addEventListener('click', () => {
+        function handleBarActivation() {
             if (activeTrack !== null && !isTransitioning && !isDarkMode && !isGridMode) {
                 if (activeTrack === 0) {
-                    // NUCLEAR track - show nuclear gallery
                     enterNuclearMode();
                 } else if (activeTrack === 4) {
-                    // BASSVICTIM track - show bassvictim gallery
                     enterBassvictimMode();
                 } else if (activeTrack === 7) {
-                    // LUCKI track - show lucki gallery
                     enterLuckiMode();
                 } else {
                     // Disabled tracks - desaturation animation
@@ -2484,6 +2480,17 @@
                     }
                 }
             }
+        }
+
+        // Desktop: click
+        gradientBar.addEventListener('click', (e) => {
+            if (!isMobile) handleBarActivation();
+        });
+
+        // Mobile: touchend fires instantly, no 300ms click delay
+        gradientBar.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            handleBarActivation();
         });
 
         // Social icons - can't access animation for disabled ones
