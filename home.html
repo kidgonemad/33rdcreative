@@ -2371,17 +2371,34 @@
                     return;
                 }
 
-                const clampedBeta = Math.max(-20, Math.min(20, gyroBeta));
-                const barIndex = Math.round(((clampedBeta + 20) / 40) * (totalSegments - 1));
-                const safeIndex = Math.max(0, Math.min(totalSegments - 1, barIndex));
+                // Dead zone: hold phone near neutral = nothing selected
+                const deadZone = 5;
+                if (Math.abs(gyroBeta) < deadZone) {
+                    if (hoveredIndex !== -1) {
+                        hoveredIndex = -1;
+                        activeTrack = null;
+                        currentTrackLabel.textContent = '';
+                    }
+                } else {
+                    // Map tilt outside dead zone to bar index
+                    // Tilt back (positive beta) = top bars, tilt forward (negative) = bottom
+                    const tiltRange = 25;
+                    const adjusted = gyroBeta > 0
+                        ? gyroBeta - deadZone
+                        : gyroBeta + deadZone;
+                    const clamped = Math.max(-(tiltRange - deadZone), Math.min(tiltRange - deadZone, adjusted));
+                    const norm = (clamped + (tiltRange - deadZone)) / (2 * (tiltRange - deadZone));
+                    const barIndex = Math.round(norm * (totalSegments - 1));
+                    const safeIndex = Math.max(0, Math.min(totalSegments - 1, barIndex));
 
-                if (hoveredIndex !== safeIndex) {
-                    hoveredIndex = safeIndex;
-                    const t = parseInt(segments[safeIndex].dataset.track);
-                    activeTrack = t;
-                    orb.style.background = segments[safeIndex].dataset.color;
-                    currentTrackLabel.textContent = trackNames[t];
-                    currentTrackLabel.style.color = segments[safeIndex].dataset.color;
+                    if (hoveredIndex !== safeIndex) {
+                        hoveredIndex = safeIndex;
+                        const t = parseInt(segments[safeIndex].dataset.track);
+                        activeTrack = t;
+                        orb.style.background = segments[safeIndex].dataset.color;
+                        currentTrackLabel.textContent = trackNames[t];
+                        currentTrackLabel.style.color = segments[safeIndex].dataset.color;
+                    }
                 }
 
                 const clampedGamma = Math.max(-30, Math.min(30, gyroGamma));
