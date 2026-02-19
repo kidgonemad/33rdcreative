@@ -2221,22 +2221,8 @@
         function animate() {
             if (!isDarkMode && !isGridMode) {
                 if (isMobile) {
-                    // Mobile: height expands on hover/gyro, mirrors desktop feel
-                    for (let i = 0; i < totalSegments; i++) {
-                        if (hoveredIndex === -1) {
-                            targetHeights[i] = 44;
-                        } else if (i === hoveredIndex) {
-                            targetHeights[i] = 70;
-                        } else {
-                            const d = Math.abs(i - hoveredIndex);
-                            targetHeights[i] = Math.max(28, 70 - (d * 10));
-                        }
-                    }
-
+                    // Mobile: bars stay flat, only color animates on gyro/touch
                     segments.forEach((seg, i) => {
-                        currentHeights[i] += (targetHeights[i] - currentHeights[i]) * params.smoothing;
-                        seg.style.height = currentHeights[i] + 'px';
-                        seg.classList.toggle('expanded', currentHeights[i] > 55);
 
                         if (hoveredIndex !== -1) {
                             const d = Math.abs(i - hoveredIndex);
