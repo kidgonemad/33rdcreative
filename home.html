@@ -734,8 +734,10 @@
                 width: 100% !important;
                 height: 100% !important;
                 overflow-x: hidden !important;
-                overflow-y: scroll !important;
+                overflow-y: auto !important;
                 -webkit-overflow-scrolling: touch !important;
+                touch-action: pan-y !important;
+                overscroll-behavior: contain !important;
             }
 
             /* Gallery grids - all three */
