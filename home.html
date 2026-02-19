@@ -570,7 +570,7 @@
 
             .bar-segment {
                 width: 100% !important;
-                height: 44px !important;
+                height: 44px;
                 margin: 0 !important;
                 border-radius: 0 !important;
             }
@@ -707,6 +707,7 @@
             .esc-hint {
                 font-size: 10px !important;
                 bottom: 20px !important;
+                pointer-events: none !important;
             }
 
             .esc-desktop {
@@ -1241,7 +1242,7 @@
             background: #0a0a0a;
             opacity: 0;
             pointer-events: none;
-            z-index: 150;
+            z-index: 250;
             transition: opacity 0.5s;
             overflow-y: scroll;
             -webkit-overflow-scrolling: touch;
@@ -1458,7 +1459,7 @@
             background: #0a0a0a;
             opacity: 0;
             pointer-events: none;
-            z-index: 150;
+            z-index: 250;
             transition: opacity 0.5s;
             overflow-y: scroll;
             -webkit-overflow-scrolling: touch;
@@ -1616,7 +1617,7 @@
             background: #0a0a0a;
             opacity: 0;
             pointer-events: none;
-            z-index: 150;
+            z-index: 250;
             transition: opacity 0.5s;
             overflow-y: scroll;
             -webkit-overflow-scrolling: touch;
@@ -2179,6 +2180,9 @@
         const targetWidths = new Array(totalSegments).fill(params.barWidth);
         const targetHeights = new Array(totalSegments).fill(params.baseHeight);
 
+        // After isMobile is set, correct mobile baseline so first frames don't flash 230→44
+        // (moved into initSegments below)
+
         const currentWidthsMini = new Array(totalSegments).fill(params.barWidth);
         const currentHeightsMini = new Array(totalSegments).fill(params.baseHeight);
         const targetWidthsMini = new Array(totalSegments).fill(params.barWidth);
@@ -2192,6 +2196,8 @@
                 if (isMobile) {
                     seg.style.width = '100%';
                     seg.style.height = '44px';
+                    currentHeights[i] = 44;
+                    targetHeights[i] = 44;
                 } else {
                     seg.style.height = params.baseHeight + 'px';
                     seg.style.width = params.barWidth + 'px';
@@ -2324,9 +2330,13 @@
                 activeTrack = t;
                 orb.style.background = seg.dataset.color;
             });
-            // Mobile: touchstart sets activeTrack directly (mouseenter/leave order is unreliable on touch)
+            // Mobile: touchstart sets activeTrack directly, pauses gyro so it can't override
             seg.addEventListener('touchstart', (e) => {
                 if (isTransitioning || isDarkMode || isGridMode) return;
+                if (typeof gyroPaused !== 'undefined') {
+                    gyroPaused = true;
+                    setTimeout(() => { gyroPaused = false; }, 400);
+                }
                 hoveredIndex = i;
                 const t = parseInt(seg.dataset.track);
                 activeTrack = t;
@@ -2347,6 +2357,7 @@
             let gyroActive = false;
             let gyroBeta = 0, gyroGamma = 0;
             let betaOffset = null;
+            let gyroPaused = false;
 
             function startGyro() {
                 if (gyroActive) return;
@@ -2369,7 +2380,7 @@
 
             // Map gyro tilt to bar selection + visual tilt
             function updateGyroSelection() {
-                if (!gyroActive || isDarkMode || isGridMode || isTransitioning
+                if (!gyroActive || gyroPaused || isDarkMode || isGridMode || isTransitioning
                     || isNuclearMode || isBassvictimMode || isLuckiMode || isGodraysMode) {
                     requestAnimationFrame(updateGyroSelection);
                     return;
@@ -2935,6 +2946,10 @@
                 menuIcon.style.opacity = '0';
                 gradientBar.classList.remove('squishing');
                 hoveredIndex = -1;
+                // iOS scroll-lock: allow fixed gallery to scroll
+                document.body.style.overflow = 'hidden';
+                document.body.style.position = 'fixed';
+                document.body.style.width = '100%';
                 setTimeout(() => {
                     transitionBlack.style.height = '0';
                     isTransitioning = false;
@@ -2955,6 +2970,9 @@
                 toggleBtn.classList.remove('dark-theme');
                 menuIcon.style.opacity = '1';
                 activeTrack = null;
+                // Restore body scroll
+                document.body.style.position = '';
+                document.body.style.width = '';
             }, 500);
             setTimeout(() => { transitionBlack.style.height = '0'; }, 600);
             setTimeout(() => { isTransitioning = false; }, 1100);
@@ -2983,6 +3001,10 @@
                 menuIcon.style.opacity = '0';
                 gradientBar.classList.remove('squishing');
                 hoveredIndex = -1;
+                // iOS scroll-lock: allow fixed gallery to scroll
+                document.body.style.overflow = 'hidden';
+                document.body.style.position = 'fixed';
+                document.body.style.width = '100%';
                 setTimeout(() => {
                     transitionBlack.style.height = '0';
                     isTransitioning = false;
@@ -3003,6 +3025,9 @@
                 toggleBtn.classList.remove('dark-theme');
                 menuIcon.style.opacity = '1';
                 activeTrack = null;
+                // Restore body scroll
+                document.body.style.position = '';
+                document.body.style.width = '';
             }, 500);
             setTimeout(() => { transitionBlack.style.height = '0'; }, 600);
             setTimeout(() => { isTransitioning = false; }, 1100);
@@ -3031,6 +3056,10 @@
                 menuIcon.style.opacity = '0';
                 gradientBar.classList.remove('squishing');
                 hoveredIndex = -1;
+                // iOS scroll-lock: allow fixed gallery to scroll
+                document.body.style.overflow = 'hidden';
+                document.body.style.position = 'fixed';
+                document.body.style.width = '100%';
                 setTimeout(() => {
                     transitionBlack.style.height = '0';
                     isTransitioning = false;
@@ -3051,6 +3080,9 @@
                 toggleBtn.classList.remove('dark-theme');
                 menuIcon.style.opacity = '1';
                 activeTrack = null;
+                // Restore body scroll
+                document.body.style.position = '';
+                document.body.style.width = '';
             }, 500);
             setTimeout(() => { transitionBlack.style.height = '0'; }, 600);
             setTimeout(() => { isTransitioning = false; }, 1100);
