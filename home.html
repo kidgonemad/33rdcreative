@@ -25,6 +25,13 @@
             overflow: hidden;
         }
 
+        body.gallery-open {
+            overflow: auto !important;
+            position: relative;
+            width: 100%;
+            min-height: 100vh;
+        }
+
         .transition-overlay {
             position: fixed;
             inset: 0;
@@ -717,6 +724,19 @@
                 top: 12px !important;
                 right: 12px !important;
                 transform: scale(0.14) !important;
+            }
+
+            /* Galleries - fix mobile scrolling */
+            .nuclear-gallery,
+            .bassvictim-gallery,
+            .lucki-gallery {
+                position: absolute !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                min-height: 100vh !important;
+                height: auto !important;
+                overflow-y: visible !important;
             }
 
             /* Gallery grids - all three */
@@ -3036,6 +3056,7 @@
             }, 400);
             setTimeout(() => {
                 isNuclearMode = true;
+                document.body.classList.add('gallery-open');
                 mainContent.classList.add('hidden');
                 nuclearGallery.classList.add('visible');
                 globalMiniBar.classList.add('visible');
@@ -3057,6 +3078,7 @@
             transitionBlack.style.height = '100vh';
             setTimeout(() => {
                 isNuclearMode = false;
+                document.body.classList.remove('gallery-open');
                 nuclearGallery.classList.remove('visible');
                 globalMiniBar.classList.remove('visible');
                 mainContent.classList.remove('hidden');
@@ -3078,6 +3100,7 @@
             }, 400);
             setTimeout(() => {
                 isLuckiMode = true;
+                document.body.classList.add('gallery-open');
                 mainContent.classList.add('hidden');
                 luckiGallery.classList.add('visible');
                 globalMiniBar.classList.add('visible');
@@ -3099,6 +3122,7 @@
             transitionBlack.style.height = '100vh';
             setTimeout(() => {
                 isLuckiMode = false;
+                document.body.classList.remove('gallery-open');
                 luckiGallery.classList.remove('visible');
                 globalMiniBar.classList.remove('visible');
                 mainContent.classList.remove('hidden');
@@ -3120,6 +3144,7 @@
             }, 400);
             setTimeout(() => {
                 isBassvictimMode = true;
+                document.body.classList.add('gallery-open');
                 mainContent.classList.add('hidden');
                 bassvictimGallery.classList.add('visible');
                 globalMiniBar.classList.add('visible');
@@ -3141,6 +3166,7 @@
             transitionBlack.style.height = '100vh';
             setTimeout(() => {
                 isBassvictimMode = false;
+                document.body.classList.remove('gallery-open');
                 bassvictimGallery.classList.remove('visible');
                 globalMiniBar.classList.remove('visible');
                 mainContent.classList.remove('hidden');
