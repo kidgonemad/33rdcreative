@@ -3091,8 +3091,8 @@
             }
         });
 
-        nuclearLightboxClose.addEventListener('click', () => { nuclearLightbox.classList.remove('active'); });
-        nuclearLightbox.addEventListener('click', (e) => { if (e.target === nuclearLightbox) nuclearLightbox.classList.remove('active'); });
+        nuclearLightboxClose.addEventListener('click', () => { nuclearLightbox.classList.remove('active'); nuclearLightboxImg.src = ''; });
+        nuclearLightbox.addEventListener('click', (e) => { if (e.target === nuclearLightbox) { nuclearLightbox.classList.remove('active'); nuclearLightboxImg.src = ''; } });
 
         // ========== ICON SPHERE ==========
         const iconSVGs = [
