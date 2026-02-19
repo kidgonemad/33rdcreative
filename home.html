@@ -596,7 +596,7 @@
                 display: none !important;
             }
 
-            /* Current track label - fixed bottom left on mobile */
+            /* Current track label - fixed bottom left on mobile, always visible */
             .current-track {
                 position: fixed !important;
                 bottom: 20px !important;
@@ -604,6 +604,7 @@
                 top: auto !important;
                 font-size: 11px !important;
                 letter-spacing: 3px !important;
+                opacity: 1 !important;
             }
 
             /* Grid: vertical layout */
@@ -2311,6 +2312,16 @@
 
         segments.forEach((seg, i) => {
             seg.addEventListener('mouseenter', () => {
+                if (isTransitioning || isDarkMode || isGridMode) return;
+                hoveredIndex = i;
+                const t = parseInt(seg.dataset.track);
+                activeTrack = t;
+                orb.style.background = seg.dataset.color;
+                currentTrackLabel.textContent = trackNames[t];
+                currentTrackLabel.style.color = seg.dataset.color;
+            });
+            // Mobile: touchstart sets activeTrack directly (mouseenter/leave order is unreliable on touch)
+            seg.addEventListener('touchstart', (e) => {
                 if (isTransitioning || isDarkMode || isGridMode) return;
                 hoveredIndex = i;
                 const t = parseInt(seg.dataset.track);
