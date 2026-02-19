@@ -2221,22 +2221,10 @@
         function animate() {
             if (!isDarkMode && !isGridMode) {
                 if (isMobile) {
-                    // Mobile: width stays 100%, only height and color animate
-                    for (let i = 0; i < totalSegments; i++) {
-                        if (hoveredIndex === -1) {
-                            targetHeights[i] = 44;
-                        } else if (i === hoveredIndex) {
-                            targetHeights[i] = 70;
-                        } else {
-                            const d = Math.abs(i - hoveredIndex);
-                            targetHeights[i] = Math.max(32, 70 - (d * 8));
-                        }
-                    }
-
+                    // Mobile: height stays flat at 44px, only color animates
                     segments.forEach((seg, i) => {
-                        currentHeights[i] += (targetHeights[i] - currentHeights[i]) * params.smoothing;
-                        seg.style.height = currentHeights[i] + 'px';
-                        seg.classList.toggle('expanded', currentHeights[i] > 55);
+                        seg.style.height = '44px';
+                        seg.classList.remove('expanded');
 
                         if (hoveredIndex !== -1) {
                             const d = Math.abs(i - hoveredIndex);
