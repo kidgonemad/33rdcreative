@@ -2405,18 +2405,15 @@
             }
             animateMobileTilt();
 
-            // Tap anywhere on bar: first tap requests gyro permission, after that enters track
-            gradientBar.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                // iOS: first tap triggers Safari's native motion permission dialog
+            // First tap on bar: request gyro permission (iOS only)
+            gradientBar.addEventListener('touchend', () => {
                 if (needsIOSPermission && !gyroPermissionRequested) {
                     gyroPermissionRequested = true;
                     DeviceOrientationEvent.requestPermission().then(state => {
                         if (state === 'granted') startGyro();
                     }).catch(() => {});
-                    return; // don't enter a gallery on the permission tap
                 }
-                if (activeTrack === null || isTransitioning || isDarkMode || isGridMode) return;
+                // Don't preventDefault - let click event fire for gallery entry
             });
 
             // Recalibrate on double tap outside bar
