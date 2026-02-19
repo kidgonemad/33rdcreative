@@ -2330,6 +2330,11 @@
             activeTrack = null;
         });
 
+        // Gyro permission state (needs to be accessible from click handler)
+        let gyroPermissionRequested = false;
+        const needsIOSPermission = isMobile && typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function';
+        let startGyro = () => {};
+
         // Mobile: gyroscope tilt to hover over bars, tap to enter
         if (isMobile) {
             let mobileTiltX = 0, mobileTiltY = 0;
@@ -2339,33 +2344,19 @@
             // Calibration: store the initial beta when gyro starts
             let betaOffset = null;
 
-            function startGyro() {
+            startGyro = function() {
                 if (gyroActive) return;
                 gyroActive = true;
 
                 window.addEventListener('deviceorientation', (e) => {
                     if (e.beta === null) return;
-                    // Calibrate on first reading - phone's current angle is "neutral"
                     if (betaOffset === null) betaOffset = e.beta;
-                    gyroBeta = e.beta - betaOffset; // forward/back tilt relative to start
-                    gyroGamma = e.gamma || 0;       // left/right tilt
+                    gyroBeta = e.beta - betaOffset;
+                    gyroGamma = e.gamma || 0;
                 });
-            }
+            };
 
-            // iOS 13+ requires permission via user gesture
-            // Request on first tap on the bar - Safari will show its native permission dialog
-            let gyroPermissionRequested = false;
-            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-                gradientBar.addEventListener('touchstart', function requestGyroOnce() {
-                    if (gyroPermissionRequested) return;
-                    gyroPermissionRequested = true;
-                    DeviceOrientationEvent.requestPermission().then(state => {
-                        if (state === 'granted') startGyro();
-                    }).catch(() => {});
-                    gradientBar.removeEventListener('touchstart', requestGyroOnce);
-                });
-            } else {
-                // Android and older iOS - just start
+            if (!needsIOSPermission) {
                 startGyro();
             }
 
@@ -2438,6 +2429,13 @@
         }
 
         gradientBar.addEventListener('click', () => {
+            // iOS: request gyro permission on first click (Safari shows native dialog)
+            if (isMobile && needsIOSPermission && !gyroPermissionRequested) {
+                gyroPermissionRequested = true;
+                DeviceOrientationEvent.requestPermission().then(state => {
+                    if (state === 'granted') startGyro();
+                }).catch(() => {});
+            }
             if (activeTrack !== null && !isTransitioning && !isDarkMode && !isGridMode) {
                 if (activeTrack === 0) {
                     // NUCLEAR track - show nuclear gallery
