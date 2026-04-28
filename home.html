@@ -774,7 +774,8 @@
             }
 
             /* Lightbox */
-            .nuclear-lightbox img {
+            .nuclear-lightbox img,
+            .nuclear-lightbox video {
                 max-width: 95vw !important;
                 max-height: 85vh !important;
                 border-radius: 4px !important;
@@ -1415,13 +1416,18 @@
             pointer-events: auto;
         }
 
-        .nuclear-lightbox img {
+        .nuclear-lightbox img,
+        .nuclear-lightbox video {
             max-width: 90vw;
             max-height: 90vh;
             object-fit: contain;
             border-radius: 6px;
             transform: scale(0.9);
             transition: transform 0.3s;
+        }
+        .nuclear-lightbox img.hidden,
+        .nuclear-lightbox video.hidden {
+            display: none;
         }
 
         .nuclear-lightbox.active img {
@@ -2036,6 +2042,7 @@
             </svg>
         </button>
         <img src="" alt="" id="nuclearLightboxImg">
+        <video id="nuclearLightboxVideo" loop muted playsinline></video>
     </div>
 
     <div class="orb" id="orb"></div>
@@ -2830,7 +2837,16 @@
         const nuclearCounter = document.getElementById('nuclearCounter');
         const nuclearLightbox = document.getElementById('nuclearLightbox');
         const nuclearLightboxImg = document.getElementById('nuclearLightboxImg');
+        const nuclearLightboxVideo = document.getElementById('nuclearLightboxVideo');
         const nuclearLightboxClose = document.getElementById('nuclearLightboxClose');
+
+        function closeNuclearLightbox() {
+            nuclearLightbox.classList.remove('active');
+            nuclearLightboxImg.src = '';
+            nuclearLightboxVideo.pause();
+            nuclearLightboxVideo.removeAttribute('src');
+            nuclearLightboxVideo.load();
+        }
 
         const nuclearImages = [
             'nuclear flame.gif',
@@ -2853,6 +2869,7 @@
 
         function initGalleryGrid(images, grid, counter, folder, itemClass) {
             counter.textContent = `${images.length} ITEMS`;
+            const preloadAttr = isMobile ? 'none' : 'auto';
             images.forEach((filename) => {
                 const item = document.createElement('div');
                 item.className = itemClass + ' loading';
@@ -2860,7 +2877,7 @@
                 const mp4Url = `${folder}/${encodeURIComponent(filename.replace('.gif', '.mp4'))}`;
                 const gifUrl = `${folder}/${encodeURIComponent(filename)}`;
 
-                item.innerHTML = `<video src="${mp4Url}" loop muted playsinline preload="auto"></video><span class="item-title">${displayName}</span>`;
+                item.innerHTML = `<video src="${mp4Url}" loop muted playsinline preload="${preloadAttr}"></video><span class="item-title">${displayName}</span>`;
                 const video = item.querySelector('video');
 
                 video.addEventListener('loadeddata', () => {
@@ -2886,13 +2903,55 @@
                     });
                 }
 
-                // Lightbox on click/tap
+                // Lightbox on click/tap — MP4 first, fall back to GIF on error
                 item.addEventListener('click', () => {
-                    nuclearLightboxImg.src = gifUrl;
+                    nuclearLightboxImg.classList.add('hidden');
+                    nuclearLightboxImg.src = '';
+                    nuclearLightboxVideo.classList.remove('hidden');
+                    nuclearLightboxVideo.src = mp4Url;
+                    nuclearLightboxVideo.play().catch(() => {});
                     nuclearLightbox.classList.add('active');
+
+                    const fallback = () => {
+                        nuclearLightboxVideo.classList.add('hidden');
+                        nuclearLightboxVideo.removeAttribute('src');
+                        nuclearLightboxVideo.load();
+                        nuclearLightboxImg.classList.remove('hidden');
+                        nuclearLightboxImg.src = gifUrl;
+                    };
+                    nuclearLightboxVideo.addEventListener('error', fallback, { once: true });
                 });
                 grid.appendChild(item);
             });
+
+            // Mobile: only fetch/play items in (or near) the viewport.
+            // Desktop unchanged — preload="auto" + hover-driven play stays instant.
+            if (isMobile) {
+                const playing = new Set();
+                const io = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        const v = entry.target.querySelector('video');
+                        if (!v) return;
+                        if (entry.isIntersecting) {
+                            if (v.preload !== 'auto') v.preload = 'auto';
+                            v.play().catch(() => {});
+                            playing.add(v);
+                            // Cap concurrent in-flight items so fling-scroll doesn't flood the network
+                            if (playing.size > 3) {
+                                const oldest = playing.values().next().value;
+                                if (oldest && oldest !== v) {
+                                    oldest.pause();
+                                    playing.delete(oldest);
+                                }
+                            }
+                        } else {
+                            v.pause();
+                            playing.delete(v);
+                        }
+                    });
+                }, { rootMargin: '200px' });
+                grid.querySelectorAll('.' + itemClass).forEach(el => io.observe(el));
+            }
         }
         let nuclearLoaded = false;
 
@@ -3092,8 +3151,8 @@
             }
         });
 
-        nuclearLightboxClose.addEventListener('click', () => { nuclearLightbox.classList.remove('active'); nuclearLightboxImg.src = ''; });
-        nuclearLightbox.addEventListener('click', (e) => { if (e.target === nuclearLightbox) { nuclearLightbox.classList.remove('active'); nuclearLightboxImg.src = ''; } });
+        nuclearLightboxClose.addEventListener('click', closeNuclearLightbox);
+        nuclearLightbox.addEventListener('click', (e) => { if (e.target === nuclearLightbox) closeNuclearLightbox(); });
 
         // ========== ICON SPHERE ==========
         const iconSVGs = [
@@ -3383,7 +3442,7 @@
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 if (nuclearLightbox.classList.contains('active')) {
-                    nuclearLightbox.classList.remove('active');
+                    closeNuclearLightbox();
                 } else if (isNuclearMode && !isTransitioning) {
                     exitNuclearMode();
                 } else if (isBassvictimMode && !isTransitioning) {
