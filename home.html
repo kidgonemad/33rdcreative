@@ -123,6 +123,28 @@
             opacity: 1;
         }
 
+        /* Load-time hint: flashes the color of tracks that have content */
+        .bar-segment .hint-flash {
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .bar-segment .hint-flash.run {
+            animation: hintFlash 1.5s ease-in-out forwards;
+        }
+
+        @keyframes hintFlash {
+            0% { opacity: 0; }
+            18% { opacity: 0.9; }
+            38% { opacity: 0; }
+            56% { opacity: 0.9; }
+            100% { opacity: 0; }
+        }
+
         .dark-content {
             position: fixed;
             inset: 0;
@@ -3447,6 +3469,26 @@
         // ========== INTRO ANIMATION ==========
         const introOverlay = document.getElementById('introOverlay');
         setTimeout(() => { introOverlay.classList.add('hidden'); }, 3000);
+
+        // ========== CONTENT HINT ==========
+        // After the intro reveals the home page, briefly flash the bars that have
+        // content (in their track colors) so users — especially on mobile, where
+        // there's no hover — know which segments are tappable.
+        const contentTracks = [0, 4, 7]; // NUCLEAR, BASSVICTIM, LUCKI
+        setTimeout(() => {
+            contentTracks.forEach((trackIndex, n) => {
+                const seg = segments[trackIndex];
+                if (!seg) return;
+                const flash = document.createElement('div');
+                flash.className = 'hint-flash';
+                flash.style.background = trackColors[trackIndex];
+                seg.appendChild(flash);
+                setTimeout(() => {
+                    flash.classList.add('run');
+                    flash.addEventListener('animationend', () => flash.remove(), { once: true });
+                }, n * 160); // stagger left-to-right
+            });
+        }, 3300);
 
         // ========== KEYBOARD EVENTS ==========
         document.addEventListener('keydown', (e) => {
