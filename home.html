@@ -1291,7 +1291,12 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: transform 0.4s;
+            transition: transform 0.4s, opacity 0.4s;
+        }
+
+        .nuclear-item.loading video,
+        .nuclear-item.loading img {
+            opacity: 0;
         }
 
         .nuclear-item:hover {
@@ -1344,18 +1349,16 @@
         }
 
         .nuclear-item.loading {
-            background: linear-gradient(90deg, #151515 25%, rgba(233, 195, 30, 0.18) 50%, #151515 75%);
-            background-size: 200% 100%;
-            animation: nuclearShimmer 1.5s infinite;
+            animation: nuclearShimmer 1.1s ease-in-out infinite;
         }
 
         @keyframes nuclearShimmer {
-            0% {
-                background-position: 200% 0;
+            0%, 100% {
+                background-color: #151515;
             }
 
-            100% {
-                background-position: -200% 0;
+            50% {
+                background-color: rgba(233, 195, 30, 0.65);
             }
         }
 
@@ -1513,7 +1516,12 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: transform 0.4s;
+            transition: transform 0.4s, opacity 0.4s;
+        }
+
+        .lucki-item.loading video,
+        .lucki-item.loading img {
+            opacity: 0;
         }
 
         .lucki-item:hover {
@@ -1566,18 +1574,16 @@
         }
 
         .lucki-item.loading {
-            background: linear-gradient(90deg, #151515 25%, rgba(95, 39, 205, 0.18) 50%, #151515 75%);
-            background-size: 200% 100%;
-            animation: luckiShimmer 1.5s infinite;
+            animation: luckiShimmer 1.1s ease-in-out infinite;
         }
 
         @keyframes luckiShimmer {
-            0% {
-                background-position: 200% 0;
+            0%, 100% {
+                background-color: #151515;
             }
 
-            100% {
-                background-position: -200% 0;
+            50% {
+                background-color: rgba(95, 39, 205, 0.65);
             }
         }
 
@@ -1671,7 +1677,12 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: transform 0.4s;
+            transition: transform 0.4s, opacity 0.4s;
+        }
+
+        .bassvictim-item.loading video,
+        .bassvictim-item.loading img {
+            opacity: 0;
         }
 
         .bassvictim-item:hover {
@@ -1724,18 +1735,16 @@
         }
 
         .bassvictim-item.loading {
-            background: linear-gradient(90deg, #151515 25%, rgba(233, 30, 30, 0.18) 50%, #151515 75%);
-            background-size: 200% 100%;
-            animation: bassvictimShimmer 1.5s infinite;
+            animation: bassvictimShimmer 1.1s ease-in-out infinite;
         }
 
         @keyframes bassvictimShimmer {
-            0% {
-                background-position: 200% 0;
+            0%, 100% {
+                background-color: #151515;
             }
 
-            100% {
-                background-position: -200% 0;
+            50% {
+                background-color: rgba(233, 30, 30, 0.65);
             }
         }
 
