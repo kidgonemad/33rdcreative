@@ -2396,6 +2396,8 @@
         });
 
         // Mobile: gyroscope tilt to browse bars
+        // Orientation/motion temporarily disabled — flip to true to re-enable.
+        const motionEnabled = false;
         if (isMobile) {
             let mobileTiltX = 0, mobileTiltY = 0;
             let targetTiltX = 4, targetTiltY = -2;
@@ -2418,7 +2420,7 @@
             const needsPermission = typeof DeviceOrientationEvent !== 'undefined'
                 && typeof DeviceOrientationEvent.requestPermission === 'function';
 
-            if (!needsPermission) {
+            if (motionEnabled && !needsPermission) {
                 startGyro();
             }
 
@@ -2464,7 +2466,7 @@
 
                 requestAnimationFrame(updateGyroSelection);
             }
-            updateGyroSelection();
+            if (motionEnabled) updateGyroSelection();
 
             // Smooth 3D tilt animation
             function animateMobileTilt() {
@@ -2473,10 +2475,10 @@
                 gradientBar.style.transform = `rotateX(${mobileTiltX}deg) rotateY(${mobileTiltY}deg)`;
                 requestAnimationFrame(animateMobileTilt);
             }
-            animateMobileTilt();
+            if (motionEnabled) animateMobileTilt();
 
             // iOS: first tap requests gyro permission, blocks gallery open
-            if (needsPermission) {
+            if (motionEnabled && needsPermission) {
                 let permissionRequested = false;
                 gradientBar.addEventListener('touchend', (e) => {
                     if (!permissionRequested) {
@@ -3023,7 +3025,8 @@
             'Untitled (2).gif',
             'Untitled (4).gif',
             'Untitled (5).gif',
-            'Untitled (6).gif'
+            'Untitled (6).gif',
+            'bassvictim-clip-2026.gif'
         ];
 
         let bassvictimLoaded = false;
