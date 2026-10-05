@@ -752,6 +752,7 @@
             .nuclear-gallery,
             .bassvictim-gallery,
             .brkfst-gallery,
+            .montreality-gallery,
             .lucki-gallery {
                 position: fixed !important;
                 top: 0 !important;
@@ -769,6 +770,7 @@
             .nuclear-grid-container,
             .bassvictim-grid-container,
             .brkfst-grid-container,
+            .montreality-grid-container,
             .lucki-grid-container {
                 padding: 60px 16px 40px !important;
                 max-width: 100% !important;
@@ -778,6 +780,7 @@
             .nuclear-grid,
             .bassvictim-grid,
             .brkfst-grid,
+            .montreality-grid,
             .lucki-grid {
                 grid-template-columns: repeat(2, 1fr) !important;
                 gap: 10px !important;
@@ -787,6 +790,7 @@
             .nuclear-item,
             .bassvictim-item,
             .brkfst-item,
+            .montreality-item,
             .lucki-item {
                 border-radius: 4px !important;
             }
@@ -795,6 +799,7 @@
             .nuclear-glow,
             .bassvictim-glow,
             .brkfst-glow,
+            .montreality-glow,
             .lucki-glow {
                 width: 300px !important;
                 height: 300px !important;
@@ -1974,6 +1979,167 @@
             z-index: 0;
         }
 
+        /* Montreality Gallery View */
+        .montreality-gallery {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a0a0a;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 250;
+            transition: opacity 0.5s;
+            overflow-y: scroll;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+        }
+
+        .montreality-gallery.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .montreality-grid-container {
+            padding: 80px 40px 60px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .montreality-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .montreality-item {
+            position: relative;
+            aspect-ratio: 16/9;
+            overflow: hidden;
+            border-radius: 6px;
+            background: #151515;
+            cursor: pointer;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s;
+        }
+
+        .montreality-item video,
+        .montreality-item img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s, opacity 0.4s;
+        }
+
+        .montreality-item.loading video,
+        .montreality-item.loading img {
+            opacity: 0;
+        }
+
+        .montreality-item:hover {
+            transform: scale(1.02);
+            box-shadow: 0 15px 50px rgba(255, 105, 180, 0.2);
+            z-index: 10;
+        }
+
+        .montreality-item:hover video,
+        .montreality-item:hover img {
+            transform: scale(1.08);
+        }
+
+        .montreality-item::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.6) 0%, transparent 40%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .montreality-item:hover::after {
+            opacity: 1;
+        }
+
+        .montreality-item .item-title {
+            display: none !important;
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            right: 12px;
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.85);
+            text-transform: uppercase;
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity 0.3s, transform 0.3s;
+            z-index: 2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .montreality-item:hover .item-title {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .montreality-item.loading {
+            animation: montrealityShimmer 1.1s ease-in-out infinite;
+        }
+
+        @keyframes montrealityShimmer {
+            0%, 100% {
+                background-color: #151515;
+            }
+
+            50% {
+                background-color: rgba(255, 105, 180, 0.65);
+            }
+        }
+
+        .montreality-counter {
+            display: none !important;
+            position: fixed;
+            bottom: 25px;
+            right: 40px;
+            font-size: 11px;
+            letter-spacing: 3px;
+            color: rgba(255, 255, 255, 0.25);
+            z-index: 160;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .montreality-gallery.visible .montreality-counter {
+            opacity: 1;
+        }
+
+        .montreality-gallery.visible~.current-track {
+            opacity: 1;
+        }
+
+        .montreality-gallery.visible~.esc-hint {
+            opacity: 0.5;
+        }
+
+        .montreality-glow {
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 105, 180, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 0;
+        }
+
         /* Godrays Viewer */
         .godrays-view {
             position: fixed;
@@ -2130,7 +2296,7 @@
                 <div class="bar-segment" data-index="8" data-track="8" data-color="#00d2d3">
                     <div class="texture"></div>
                 </div>
-                <div class="bar-segment" data-index="9" data-track="9" data-color="#ff6b81">
+                <div class="bar-segment" data-index="9" data-track="9" data-color="#ff69b4">
                     <div class="texture"></div>
                 </div>
                 <div class="bar-segment" data-index="10" data-track="10" data-color="#7bed9f">
@@ -2187,7 +2353,7 @@
             <div class="bar-segment-mini" data-index="6" data-track="6" data-color="#1dd1a1"></div>
             <div class="bar-segment-mini" data-index="7" data-track="7" data-color="#5f27cd"></div>
             <div class="bar-segment-mini" data-index="8" data-track="8" data-color="#00d2d3"></div>
-            <div class="bar-segment-mini" data-index="9" data-track="9" data-color="#ff6b81"></div>
+            <div class="bar-segment-mini" data-index="9" data-track="9" data-color="#ff69b4"></div>
             <div class="bar-segment-mini" data-index="10" data-track="10" data-color="#7bed9f"></div>
             <div class="bar-segment-mini" data-index="11" data-track="11" data-color="#a55eea"></div>
         </div>
@@ -2224,6 +2390,17 @@
             </div>
         </div>
         <div class="brkfst-counter" id="brkfstCounter"></div>
+    </div>
+
+    <!-- Montreality Gallery -->
+    <div class="montreality-gallery" id="montrealityGallery">
+        <div class="montreality-glow"></div>
+        <div class="montreality-grid-container">
+            <div class="montreality-grid" id="montrealityGrid">
+                <!-- Images loaded by JS -->
+            </div>
+        </div>
+        <div class="montreality-counter" id="montrealityCounter"></div>
     </div>
 
     <!-- Lucki Gallery -->
@@ -2337,15 +2514,15 @@
         const globalMiniBar = document.getElementById('globalMiniBar');
 
         const totalSegments = 12;
-        const trackNames = ['NUCLEAR', 'WAVES', 'BRKFST', '33', 'BASSVICTIM', 'ECHOES', 'PULSE', 'LUCKI', 'FLUX', 'HAZE', 'BLOOM', 'STATIC'];
+        const trackNames = ['NUCLEAR', 'WAVES', 'BRKFST', '33', 'BASSVICTIM', 'ECHOES', 'PULSE', 'LUCKI', 'FLUX', 'MONTREALITY', 'BLOOM', 'STATIC'];
         const artistNames = ['SANNHET', 'FLYING LOTUS', 'TYCHO', 'BONOBO', 'MASSIVE ATTACK', 'BOARDS OF CANADA', 'APHEX TWIN', 'BURIAL', 'FOUR TET', 'CARIBOU', 'MODERAT', 'AMON TOBIN'];
 
         const grayColors = ['#c8c8c8', '#bcbcbc', '#afafaf', '#a2a2a2', '#959595', '#888888', '#7a7a7a', '#6d6d6d', '#5f5f5f', '#525252', '#3d3d3d', '#282828'];
 
         // Distinct colors across the spectrum for hover effect - each column has unique color
-        const hoverColors = ['#e9c31e', '#4ecdc4', '#8b5a2b', '#764ba2', '#e91e1e', '#ff9f43', '#1dd1a1', '#5f27cd', '#00d2d3', '#ff6b81', '#7bed9f', '#a55eea'];
+        const hoverColors = ['#e9c31e', '#4ecdc4', '#8b5a2b', '#764ba2', '#e91e1e', '#ff9f43', '#1dd1a1', '#5f27cd', '#00d2d3', '#ff69b4', '#7bed9f', '#a55eea'];
 
-        const trackColors = ['#e9c31e', '#4ecdc4', '#8b5a2b', '#764ba2', '#e91e1e', '#ff9f43', '#1dd1a1', '#5f27cd', '#00d2d3', '#ff6b81', '#7bed9f', '#a55eea'];
+        const trackColors = ['#e9c31e', '#4ecdc4', '#8b5a2b', '#764ba2', '#e91e1e', '#ff9f43', '#1dd1a1', '#5f27cd', '#00d2d3', '#ff69b4', '#7bed9f', '#a55eea'];
 
         // Create 3D cubes
         const cubeData = [];
@@ -2392,6 +2569,7 @@
         let isNuclearMode = false;
         let isBassvictimMode = false;
         let isBrkfstMode = false;
+        let isMontrealityMode = false;
         let isLuckiMode = false;
         let isGodraysMode = false;
         let isTransitioning = false;
@@ -2605,7 +2783,7 @@
             // Map gyro tilt to bar selection + visual tilt
             function updateGyroSelection() {
                 if (!gyroActive || gyroPaused || isDarkMode || isGridMode || isTransitioning
-                    || isNuclearMode || isBassvictimMode || isBrkfstMode || isLuckiMode || isGodraysMode) {
+                    || isNuclearMode || isBassvictimMode || isBrkfstMode || isMontrealityMode || isLuckiMode || isGodraysMode) {
                     requestAnimationFrame(updateGyroSelection);
                     return;
                 }
@@ -2692,6 +2870,8 @@
                     enterBassvictimMode();
                 } else if (activeTrack === 7) {
                     enterLuckiMode();
+                } else if (activeTrack === 9) {
+                    enterMontrealityMode();
                 } else {
                     // Disabled tracks - desaturation animation
                     const seg = segments[hoveredIndex];
@@ -3161,7 +3341,8 @@
                     lastStarted = items.indexOf(el);
                 };
 
-                function rotate() {
+                // justEnded: a clip that just finished goes to the back of the queue
+                function rotate(justEnded) {
                     if (!gallery.classList.contains('visible')) {
                         playing.forEach(stop);
                         playing = [];
@@ -3173,7 +3354,8 @@
                     const loopAll = visible.length <= MAX_PLAYING;
                     visible.forEach(el => { videoOf(el).loop = loopAll; });
                     while (playing.length < MAX_PLAYING) {
-                        const idle = visible.filter(el => !playing.includes(el));
+                        let idle = visible.filter(el => !playing.includes(el));
+                        if (idle.length > 1) idle = idle.filter(el => el !== justEnded);
                         const el = idle.find(el => items.indexOf(el) > lastStarted) || idle[0];
                         if (!el) break;
                         start(el);
@@ -3187,7 +3369,7 @@
                     v.addEventListener('ended', () => {
                         playing = playing.filter(p => p !== el);
                         v.currentTime = 0;
-                        rotate();
+                        rotate(el);
                     });
                 });
 
@@ -3210,7 +3392,7 @@
 
                 items.forEach(el => { preloadIO.observe(el); visibleIO.observe(el); });
                 // Start/stop right away when the gallery opens or closes
-                new MutationObserver(rotate).observe(gallery, { attributes: true, attributeFilter: ['class'] });
+                new MutationObserver(() => rotate()).observe(gallery, { attributes: true, attributeFilter: ['class'] });
             }
         }
         let nuclearLoaded = false;
@@ -3278,6 +3460,20 @@
         ];
 
         let brkfstLoaded = false;
+
+        // ========== MONTREALITY GALLERY ==========
+        const montrealityGallery = document.getElementById('montrealityGallery');
+        const montrealityGrid = document.getElementById('montrealityGrid');
+        const montrealityCounter = document.getElementById('montrealityCounter');
+
+        const montrealityImages = [
+            'montreality-01.gif',
+            'montreality-02.gif',
+            'montreality-03.gif',
+            'montreality-04.gif'
+        ];
+
+        let montrealityLoaded = false;
 
         function enterNuclearMode() {
             if (!nuclearLoaded) {
@@ -3471,12 +3667,61 @@
             setTimeout(() => { isTransitioning = false; }, 1100);
         }
 
+        function enterMontrealityMode() {
+            if (!montrealityLoaded) {
+                montrealityLoaded = true;
+                initGalleryGrid(montrealityImages, montrealityGrid, montrealityCounter, 'montreality', 'montreality-item');
+            }
+            currentTrackLabel.textContent = 'MONTREALITY';
+            currentTrackLabel.style.color = segments[9].dataset.color;
+            isTransitioning = true;
+            gradientBar.classList.add('squishing');
+            setTimeout(() => {
+                transitionBlack.style.transition = 'height 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+                transitionBlack.style.height = '100vh';
+            }, 400);
+            setTimeout(() => {
+                isMontrealityMode = true;
+                mainContent.classList.add('hidden');
+                montrealityGallery.classList.add('visible');
+                globalMiniBar.classList.add('visible');
+                editPanel.classList.add('dark-theme');
+                toggleBtn.classList.add('dark-theme');
+                menuIcon.style.opacity = '0';
+                gradientBar.classList.remove('squishing');
+                hoveredIndex = -1;
+                setTimeout(() => {
+                    transitionBlack.style.height = '0';
+                    isTransitioning = false;
+                }, 100);
+            }, 900);
+        }
+
+        function exitMontrealityMode() {
+            isTransitioning = true;
+            transitionBlack.style.transition = 'height 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+            transitionBlack.style.height = '100vh';
+            setTimeout(() => {
+                isMontrealityMode = false;
+                montrealityGallery.classList.remove('visible');
+                globalMiniBar.classList.remove('visible');
+                mainContent.classList.remove('hidden');
+                editPanel.classList.remove('dark-theme');
+                toggleBtn.classList.remove('dark-theme');
+                menuIcon.style.opacity = '1';
+                activeTrack = null;
+            }, 500);
+            setTimeout(() => { transitionBlack.style.height = '0'; }, 600);
+            setTimeout(() => { isTransitioning = false; }, 1100);
+        }
+
         // Click on global mini bar to exit current mode
         globalMiniBar.addEventListener('click', () => {
             if (!isTransitioning) {
                 if (isNuclearMode) exitNuclearMode();
                 else if (isBassvictimMode) exitBassvictimMode();
                 else if (isBrkfstMode) exitBrkfstMode();
+                else if (isMontrealityMode) exitMontrealityMode();
                 else if (isLuckiMode) exitLuckiMode();
                 else if (isGodraysMode) exitGodraysMode();
                 else if (isDarkMode) exitDarkMode();
@@ -3774,7 +4019,7 @@
         // After the intro reveals the home page, briefly flash the bars that have
         // content (in their track colors) so users — especially on mobile, where
         // there's no hover — know which segments are tappable.
-        const contentTracks = [0, 2, 4, 7]; // NUCLEAR, BRKFST, BASSVICTIM, LUCKI
+        const contentTracks = [0, 2, 4, 7, 9]; // NUCLEAR, BRKFST, BASSVICTIM, LUCKI, MONTREALITY
         setTimeout(() => {
             contentTracks.forEach((trackIndex, n) => {
                 const seg = segments[trackIndex];
@@ -3801,6 +4046,8 @@
                     exitBassvictimMode();
                 } else if (isBrkfstMode && !isTransitioning) {
                     exitBrkfstMode();
+                } else if (isMontrealityMode && !isTransitioning) {
+                    exitMontrealityMode();
                 } else if (isLuckiMode && !isTransitioning) {
                     exitLuckiMode();
                 } else if (isGodraysMode && !isTransitioning && menuState !== 3) {
