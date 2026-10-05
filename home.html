@@ -697,11 +697,6 @@
                 opacity: 1 !important;
             }
 
-            /* Show shadow when cube is clicked/active */
-            .cube-wrapper.shadow-active .cube-shadow {
-                opacity: 1 !important;
-            }
-
             /* Social icons */
             .social-icons {
                 gap: 20px !important;
@@ -3157,7 +3152,7 @@
             trackInfoOverlay.classList.remove('visible');
             mainContent.style.opacity = '1';
             mainContent.style.pointerEvents = 'auto';
-            cubeWrappers.forEach(c => c.classList.remove('faded', 'shadow-active'));
+            cubeWrappers.forEach(c => c.classList.remove('faded'));
         }
 
         function openSphereView() {
@@ -3219,18 +3214,13 @@
             });
 
             cube.addEventListener('mouseleave', () => {
-                cubeWrappers.forEach(c => c.classList.remove('faded', 'shadow-active'));
+                cubeWrappers.forEach(c => c.classList.remove('faded'));
                 gridView.style.background = '#d8d8d8';
                 trackInfoOverlay.classList.remove('visible');
                 trackInfoOverlay.style.opacity = '';
             });
 
             cube.addEventListener('click', () => {
-                // Mobile: shadow follows the selected cube only (cleared on deselect/close)
-                if (window.innerWidth <= 768) {
-                    cubeWrappers.forEach(c => c.classList.toggle('shadow-active', c === cube));
-                }
-
                 // Desaturate color for greyed out look
                 const greyedColor = '#888888';
                 overlayArtist.textContent = 'UNDER';
