@@ -3137,33 +3137,74 @@
                 grid.appendChild(item);
             });
 
-            // Mobile: only fetch/play items in (or near) the viewport.
+            // Mobile: only fetch items near the viewport, and rotate playback through
+            // the on-screen clips — 3 play at a time, one hands off every ROTATE_MS.
             // Desktop unchanged — preload="auto" + hover-driven play stays instant.
             if (isMobile) {
-                const playing = new Set();
-                const io = new IntersectionObserver((entries) => {
+                const MAX_PLAYING = 3;
+                const ROTATE_MS = 2500;
+                const gallery = grid.closest('.' + folder + '-gallery');
+                const items = [...grid.querySelectorAll('.' + itemClass)];
+                const onScreen = new Set();
+                let playing = []; // oldest first
+                let lastStarted = -1; // item index, so rotation walks the grid in order
+
+                const videoOf = (el) => el.querySelector('video');
+                const stop = (el) => { const v = videoOf(el); if (v) v.pause(); };
+                const start = (el) => {
+                    const v = videoOf(el);
+                    if (v) v.play().catch(() => {});
+                    playing.push(el);
+                    lastStarted = items.indexOf(el);
+                };
+
+                // swap=true (timer tick): hand the longest-playing slot to the next idle clip.
+                // swap=false (scroll): just drop off-screen clips and fill free slots.
+                function rotate(swap) {
+                    if (!gallery.classList.contains('visible')) {
+                        playing.forEach(stop);
+                        playing = [];
+                        return;
+                    }
+                    const visible = items.filter(el => onScreen.has(el) && videoOf(el));
+                    if (!playing.length) swap = false; // fresh start: fill, don't rotate yet
+                    playing = playing.filter(el => { if (visible.includes(el)) return true; stop(el); return false; });
+                    const nextIdle = () => {
+                        const idle = visible.filter(el => !playing.includes(el));
+                        return idle.find(el => items.indexOf(el) > lastStarted) || idle[0];
+                    };
+                    while (playing.length < MAX_PLAYING) {
+                        const el = nextIdle();
+                        if (!el) break;
+                        start(el);
+                    }
+                    if (swap && playing.length === MAX_PLAYING) {
+                        const el = nextIdle();
+                        if (el) { stop(playing.shift()); start(el); }
+                    }
+                }
+
+                // Start fetching a little before items scroll into view
+                const preloadIO = new IntersectionObserver((entries) => {
                     entries.forEach(entry => {
-                        const v = entry.target.querySelector('video');
-                        if (!v) return;
-                        if (entry.isIntersecting) {
-                            if (v.preload !== 'auto') v.preload = 'auto';
-                            v.play().catch(() => {});
-                            playing.add(v);
-                            // Cap concurrent in-flight items so fling-scroll doesn't flood the network
-                            if (playing.size > 3) {
-                                const oldest = playing.values().next().value;
-                                if (oldest && oldest !== v) {
-                                    oldest.pause();
-                                    playing.delete(oldest);
-                                }
-                            }
-                        } else {
-                            v.pause();
-                            playing.delete(v);
-                        }
+                        const v = videoOf(entry.target);
+                        if (v && entry.isIntersecting && v.preload !== 'auto') v.preload = 'auto';
                     });
                 }, { rootMargin: '200px' });
-                grid.querySelectorAll('.' + itemClass).forEach(el => io.observe(el));
+
+                // Track which items are actually on screen; react immediately to scroll
+                const visibleIO = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) onScreen.add(entry.target);
+                        else onScreen.delete(entry.target);
+                    });
+                    rotate(false);
+                }, { threshold: 0.4 });
+
+                items.forEach(el => { preloadIO.observe(el); visibleIO.observe(el); });
+                // Start/stop right away when the gallery opens or closes
+                new MutationObserver(() => rotate(false)).observe(gallery, { attributes: true, attributeFilter: ['class'] });
+                setInterval(() => rotate(true), ROTATE_MS);
             }
         }
         let nuclearLoaded = false;
