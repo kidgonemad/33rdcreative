@@ -751,6 +751,7 @@
             /* Galleries - mobile */
             .nuclear-gallery,
             .bassvictim-gallery,
+            .brkfst-gallery,
             .lucki-gallery {
                 position: fixed !important;
                 top: 0 !important;
@@ -767,6 +768,7 @@
             /* Gallery grids - all three */
             .nuclear-grid-container,
             .bassvictim-grid-container,
+            .brkfst-grid-container,
             .lucki-grid-container {
                 padding: 60px 16px 40px !important;
                 max-width: 100% !important;
@@ -775,6 +777,7 @@
 
             .nuclear-grid,
             .bassvictim-grid,
+            .brkfst-grid,
             .lucki-grid {
                 grid-template-columns: repeat(2, 1fr) !important;
                 gap: 10px !important;
@@ -783,6 +786,7 @@
             /* Gallery items */
             .nuclear-item,
             .bassvictim-item,
+            .brkfst-item,
             .lucki-item {
                 border-radius: 4px !important;
             }
@@ -790,6 +794,7 @@
             /* Glow effects - smaller on mobile */
             .nuclear-glow,
             .bassvictim-glow,
+            .brkfst-glow,
             .lucki-glow {
                 width: 300px !important;
                 height: 300px !important;
@@ -1808,6 +1813,167 @@
             z-index: 0;
         }
 
+        /* Brkfst Gallery View */
+        .brkfst-gallery {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a0a0a;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 250;
+            transition: opacity 0.5s;
+            overflow-y: scroll;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+        }
+
+        .brkfst-gallery.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .brkfst-grid-container {
+            padding: 80px 40px 60px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .brkfst-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .brkfst-item {
+            position: relative;
+            aspect-ratio: 16/9;
+            overflow: hidden;
+            border-radius: 6px;
+            background: #151515;
+            cursor: pointer;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s;
+        }
+
+        .brkfst-item video,
+        .brkfst-item img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s, opacity 0.4s;
+        }
+
+        .brkfst-item.loading video,
+        .brkfst-item.loading img {
+            opacity: 0;
+        }
+
+        .brkfst-item:hover {
+            transform: scale(1.02);
+            box-shadow: 0 15px 50px rgba(139, 90, 43, 0.2);
+            z-index: 10;
+        }
+
+        .brkfst-item:hover video,
+        .brkfst-item:hover img {
+            transform: scale(1.08);
+        }
+
+        .brkfst-item::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.6) 0%, transparent 40%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .brkfst-item:hover::after {
+            opacity: 1;
+        }
+
+        .brkfst-item .item-title {
+            display: none !important;
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            right: 12px;
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.85);
+            text-transform: uppercase;
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity 0.3s, transform 0.3s;
+            z-index: 2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .brkfst-item:hover .item-title {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .brkfst-item.loading {
+            animation: brkfstShimmer 1.1s ease-in-out infinite;
+        }
+
+        @keyframes brkfstShimmer {
+            0%, 100% {
+                background-color: #151515;
+            }
+
+            50% {
+                background-color: rgba(139, 90, 43, 0.65);
+            }
+        }
+
+        .brkfst-counter {
+            display: none !important;
+            position: fixed;
+            bottom: 25px;
+            right: 40px;
+            font-size: 11px;
+            letter-spacing: 3px;
+            color: rgba(255, 255, 255, 0.25);
+            z-index: 160;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .brkfst-gallery.visible .brkfst-counter {
+            opacity: 1;
+        }
+
+        .brkfst-gallery.visible~.current-track {
+            opacity: 1;
+        }
+
+        .brkfst-gallery.visible~.esc-hint {
+            opacity: 0.5;
+        }
+
+        .brkfst-glow {
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(139, 90, 43, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 0;
+        }
+
         /* Godrays Viewer */
         .godrays-view {
             position: fixed;
@@ -1943,7 +2109,7 @@
                 <div class="bar-segment" data-index="1" data-track="1" data-color="#4ecdc4">
                     <div class="texture"></div>
                 </div>
-                <div class="bar-segment" data-index="2" data-track="2" data-color="#667eea">
+                <div class="bar-segment" data-index="2" data-track="2" data-color="#8b5a2b">
                     <div class="texture"></div>
                 </div>
                 <div class="bar-segment" data-index="3" data-track="3" data-color="#764ba2">
@@ -2014,7 +2180,7 @@
         <div class="gradient-bar-mini" id="gradientBarMini">
             <div class="bar-segment-mini" data-index="0" data-track="0" data-color="#e9c31e"></div>
             <div class="bar-segment-mini" data-index="1" data-track="1" data-color="#4ecdc4"></div>
-            <div class="bar-segment-mini" data-index="2" data-track="2" data-color="#667eea"></div>
+            <div class="bar-segment-mini" data-index="2" data-track="2" data-color="#8b5a2b"></div>
             <div class="bar-segment-mini" data-index="3" data-track="3" data-color="#764ba2"></div>
             <div class="bar-segment-mini" data-index="4" data-track="4" data-color="#e91e1e"></div>
             <div class="bar-segment-mini" data-index="5" data-track="5" data-color="#ff9f43"></div>
@@ -2047,6 +2213,17 @@
             </div>
         </div>
         <div class="bassvictim-counter" id="bassvictimCounter"></div>
+    </div>
+
+    <!-- Brkfst Gallery -->
+    <div class="brkfst-gallery" id="brkfstGallery">
+        <div class="brkfst-glow"></div>
+        <div class="brkfst-grid-container">
+            <div class="brkfst-grid" id="brkfstGrid">
+                <!-- Images loaded by JS -->
+            </div>
+        </div>
+        <div class="brkfst-counter" id="brkfstCounter"></div>
     </div>
 
     <!-- Lucki Gallery -->
@@ -2160,15 +2337,15 @@
         const globalMiniBar = document.getElementById('globalMiniBar');
 
         const totalSegments = 12;
-        const trackNames = ['NUCLEAR', 'WAVES', 'DRIFT', '33', 'BASSVICTIM', 'ECHOES', 'PULSE', 'LUCKI', 'FLUX', 'HAZE', 'BLOOM', 'STATIC'];
+        const trackNames = ['NUCLEAR', 'WAVES', 'BRKFST', '33', 'BASSVICTIM', 'ECHOES', 'PULSE', 'LUCKI', 'FLUX', 'HAZE', 'BLOOM', 'STATIC'];
         const artistNames = ['SANNHET', 'FLYING LOTUS', 'TYCHO', 'BONOBO', 'MASSIVE ATTACK', 'BOARDS OF CANADA', 'APHEX TWIN', 'BURIAL', 'FOUR TET', 'CARIBOU', 'MODERAT', 'AMON TOBIN'];
 
         const grayColors = ['#c8c8c8', '#bcbcbc', '#afafaf', '#a2a2a2', '#959595', '#888888', '#7a7a7a', '#6d6d6d', '#5f5f5f', '#525252', '#3d3d3d', '#282828'];
 
         // Distinct colors across the spectrum for hover effect - each column has unique color
-        const hoverColors = ['#e9c31e', '#4ecdc4', '#667eea', '#764ba2', '#e91e1e', '#ff9f43', '#1dd1a1', '#5f27cd', '#00d2d3', '#ff6b81', '#7bed9f', '#a55eea'];
+        const hoverColors = ['#e9c31e', '#4ecdc4', '#8b5a2b', '#764ba2', '#e91e1e', '#ff9f43', '#1dd1a1', '#5f27cd', '#00d2d3', '#ff6b81', '#7bed9f', '#a55eea'];
 
-        const trackColors = ['#e9c31e', '#4ecdc4', '#667eea', '#764ba2', '#e91e1e', '#ff9f43', '#1dd1a1', '#5f27cd', '#00d2d3', '#ff6b81', '#7bed9f', '#a55eea'];
+        const trackColors = ['#e9c31e', '#4ecdc4', '#8b5a2b', '#764ba2', '#e91e1e', '#ff9f43', '#1dd1a1', '#5f27cd', '#00d2d3', '#ff6b81', '#7bed9f', '#a55eea'];
 
         // Create 3D cubes
         const cubeData = [];
@@ -2214,6 +2391,7 @@
         let isSphereMode = false;
         let isNuclearMode = false;
         let isBassvictimMode = false;
+        let isBrkfstMode = false;
         let isLuckiMode = false;
         let isGodraysMode = false;
         let isTransitioning = false;
@@ -2427,7 +2605,7 @@
             // Map gyro tilt to bar selection + visual tilt
             function updateGyroSelection() {
                 if (!gyroActive || gyroPaused || isDarkMode || isGridMode || isTransitioning
-                    || isNuclearMode || isBassvictimMode || isLuckiMode || isGodraysMode) {
+                    || isNuclearMode || isBassvictimMode || isBrkfstMode || isLuckiMode || isGodraysMode) {
                     requestAnimationFrame(updateGyroSelection);
                     return;
                 }
@@ -2508,6 +2686,8 @@
             if (activeTrack !== null && !isTransitioning && !isDarkMode && !isGridMode) {
                 if (activeTrack === 0) {
                     enterNuclearMode();
+                } else if (activeTrack === 2) {
+                    enterBrkfstMode();
                 } else if (activeTrack === 4) {
                     enterBassvictimMode();
                 } else if (activeTrack === 7) {
@@ -3031,6 +3211,20 @@
 
         let bassvictimLoaded = false;
 
+        // ========== BRKFST GALLERY ==========
+        const brkfstGallery = document.getElementById('brkfstGallery');
+        const brkfstGrid = document.getElementById('brkfstGrid');
+        const brkfstCounter = document.getElementById('brkfstCounter');
+
+        const brkfstImages = [
+            'brkfst-01.gif',
+            'brkfst-02.gif',
+            'brkfst-03.gif',
+            'brkfst-04.gif'
+        ];
+
+        let brkfstLoaded = false;
+
         function enterNuclearMode() {
             if (!nuclearLoaded) {
                 nuclearLoaded = true;
@@ -3175,11 +3369,60 @@
             setTimeout(() => { isTransitioning = false; }, 1100);
         }
 
+        function enterBrkfstMode() {
+            if (!brkfstLoaded) {
+                brkfstLoaded = true;
+                initGalleryGrid(brkfstImages, brkfstGrid, brkfstCounter, 'brkfst', 'brkfst-item');
+            }
+            currentTrackLabel.textContent = 'BRKFST';
+            currentTrackLabel.style.color = segments[2].dataset.color;
+            isTransitioning = true;
+            gradientBar.classList.add('squishing');
+            setTimeout(() => {
+                transitionBlack.style.transition = 'height 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+                transitionBlack.style.height = '100vh';
+            }, 400);
+            setTimeout(() => {
+                isBrkfstMode = true;
+                mainContent.classList.add('hidden');
+                brkfstGallery.classList.add('visible');
+                globalMiniBar.classList.add('visible');
+                editPanel.classList.add('dark-theme');
+                toggleBtn.classList.add('dark-theme');
+                menuIcon.style.opacity = '0';
+                gradientBar.classList.remove('squishing');
+                hoveredIndex = -1;
+                setTimeout(() => {
+                    transitionBlack.style.height = '0';
+                    isTransitioning = false;
+                }, 100);
+            }, 900);
+        }
+
+        function exitBrkfstMode() {
+            isTransitioning = true;
+            transitionBlack.style.transition = 'height 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+            transitionBlack.style.height = '100vh';
+            setTimeout(() => {
+                isBrkfstMode = false;
+                brkfstGallery.classList.remove('visible');
+                globalMiniBar.classList.remove('visible');
+                mainContent.classList.remove('hidden');
+                editPanel.classList.remove('dark-theme');
+                toggleBtn.classList.remove('dark-theme');
+                menuIcon.style.opacity = '1';
+                activeTrack = null;
+            }, 500);
+            setTimeout(() => { transitionBlack.style.height = '0'; }, 600);
+            setTimeout(() => { isTransitioning = false; }, 1100);
+        }
+
         // Click on global mini bar to exit current mode
         globalMiniBar.addEventListener('click', () => {
             if (!isTransitioning) {
                 if (isNuclearMode) exitNuclearMode();
                 else if (isBassvictimMode) exitBassvictimMode();
+                else if (isBrkfstMode) exitBrkfstMode();
                 else if (isLuckiMode) exitLuckiMode();
                 else if (isGodraysMode) exitGodraysMode();
                 else if (isDarkMode) exitDarkMode();
@@ -3477,7 +3720,7 @@
         // After the intro reveals the home page, briefly flash the bars that have
         // content (in their track colors) so users — especially on mobile, where
         // there's no hover — know which segments are tappable.
-        const contentTracks = [0, 4, 7]; // NUCLEAR, BASSVICTIM, LUCKI
+        const contentTracks = [0, 2, 4, 7]; // NUCLEAR, BRKFST, BASSVICTIM, LUCKI
         setTimeout(() => {
             contentTracks.forEach((trackIndex, n) => {
                 const seg = segments[trackIndex];
@@ -3502,6 +3745,8 @@
                     exitNuclearMode();
                 } else if (isBassvictimMode && !isTransitioning) {
                     exitBassvictimMode();
+                } else if (isBrkfstMode && !isTransitioning) {
+                    exitBrkfstMode();
                 } else if (isLuckiMode && !isTransitioning) {
                     exitLuckiMode();
                 } else if (isGodraysMode && !isTransitioning && menuState !== 3) {
