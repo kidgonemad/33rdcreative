@@ -3138,51 +3138,58 @@
             });
 
             // Mobile: only fetch items near the viewport, and rotate playback through
-            // the on-screen clips — 3 play at a time, one hands off every ROTATE_MS.
+            // the on-screen clips — 3 play at a time; each plays once in full, then
+            // hands its slot to the next clip in grid order until all have played.
             // Desktop unchanged — preload="auto" + hover-driven play stays instant.
             if (isMobile) {
                 const MAX_PLAYING = 3;
-                const ROTATE_MS = 2500;
                 const gallery = grid.closest('.' + folder + '-gallery');
                 const items = [...grid.querySelectorAll('.' + itemClass)];
                 const onScreen = new Set();
-                let playing = []; // oldest first
+                let playing = [];
                 let lastStarted = -1; // item index, so rotation walks the grid in order
 
                 const videoOf = (el) => el.querySelector('video');
                 const stop = (el) => { const v = videoOf(el); if (v) v.pause(); };
                 const start = (el) => {
                     const v = videoOf(el);
-                    if (v) v.play().catch(() => {});
+                    if (v) {
+                        v.currentTime = 0;
+                        v.play().catch(() => {});
+                    }
                     playing.push(el);
                     lastStarted = items.indexOf(el);
                 };
 
-                // swap=true (timer tick): hand the longest-playing slot to the next idle clip.
-                // swap=false (scroll): just drop off-screen clips and fill free slots.
-                function rotate(swap) {
+                function rotate() {
                     if (!gallery.classList.contains('visible')) {
                         playing.forEach(stop);
                         playing = [];
                         return;
                     }
                     const visible = items.filter(el => onScreen.has(el) && videoOf(el));
-                    if (!playing.length) swap = false; // fresh start: fill, don't rotate yet
                     playing = playing.filter(el => { if (visible.includes(el)) return true; stop(el); return false; });
-                    const nextIdle = () => {
-                        const idle = visible.filter(el => !playing.includes(el));
-                        return idle.find(el => items.indexOf(el) > lastStarted) || idle[0];
-                    };
+                    // Few enough to all play: just loop them. Otherwise play each once, then rotate.
+                    const loopAll = visible.length <= MAX_PLAYING;
+                    visible.forEach(el => { videoOf(el).loop = loopAll; });
                     while (playing.length < MAX_PLAYING) {
-                        const el = nextIdle();
+                        const idle = visible.filter(el => !playing.includes(el));
+                        const el = idle.find(el => items.indexOf(el) > lastStarted) || idle[0];
                         if (!el) break;
                         start(el);
                     }
-                    if (swap && playing.length === MAX_PLAYING) {
-                        const el = nextIdle();
-                        if (el) { stop(playing.shift()); start(el); }
-                    }
                 }
+
+                // A clip finished its full run — free its slot for the next one
+                items.forEach(el => {
+                    const v = videoOf(el);
+                    if (!v) return;
+                    v.addEventListener('ended', () => {
+                        playing = playing.filter(p => p !== el);
+                        v.currentTime = 0;
+                        rotate();
+                    });
+                });
 
                 // Start fetching a little before items scroll into view
                 const preloadIO = new IntersectionObserver((entries) => {
@@ -3198,13 +3205,12 @@
                         if (entry.isIntersecting) onScreen.add(entry.target);
                         else onScreen.delete(entry.target);
                     });
-                    rotate(false);
+                    rotate();
                 }, { threshold: 0.4 });
 
                 items.forEach(el => { preloadIO.observe(el); visibleIO.observe(el); });
                 // Start/stop right away when the gallery opens or closes
-                new MutationObserver(() => rotate(false)).observe(gallery, { attributes: true, attributeFilter: ['class'] });
-                setInterval(() => rotate(true), ROTATE_MS);
+                new MutationObserver(rotate).observe(gallery, { attributes: true, attributeFilter: ['class'] });
             }
         }
         let nuclearLoaded = false;
