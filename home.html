@@ -4284,10 +4284,13 @@
             });
         }
 
-        // (Re)start the cycle: flash after `delay`, then every HINT_REPEAT_MS
+        // (Re)start the cycle: flash after `delay`, then every HINT_REPEAT_MS.
+        // If the home bar isn't idle yet (e.g. a transition is still finishing),
+        // keep checking every 250ms so the flash lands as soon as it is.
         function scheduleHint(delay) {
             clearTimeout(hintTimer);
             hintTimer = setTimeout(function tick() {
+                if (!homeIsIdle()) { hintTimer = setTimeout(tick, 250); return; }
                 runHint();
                 hintTimer = setTimeout(tick, HINT_REPEAT_MS);
             }, delay);
@@ -4297,7 +4300,7 @@
 
         // Back on the home page (main content un-hidden) → flash again right away
         new MutationObserver(() => {
-            if (!mainContent.classList.contains('hidden')) scheduleHint(700);
+            if (!mainContent.classList.contains('hidden')) scheduleHint(300);
         }).observe(mainContent, { attributes: true, attributeFilter: ['class'] });
 
         // ========== KEYBOARD EVENTS ==========
