@@ -3157,7 +3157,7 @@
             trackInfoOverlay.classList.remove('visible');
             mainContent.style.opacity = '1';
             mainContent.style.pointerEvents = 'auto';
-            cubeWrappers.forEach(c => c.classList.remove('faded'));
+            cubeWrappers.forEach(c => c.classList.remove('faded', 'shadow-active'));
         }
 
         function openSphereView() {
@@ -3219,16 +3219,16 @@
             });
 
             cube.addEventListener('mouseleave', () => {
-                cubeWrappers.forEach(c => c.classList.remove('faded'));
+                cubeWrappers.forEach(c => c.classList.remove('faded', 'shadow-active'));
                 gridView.style.background = '#d8d8d8';
                 trackInfoOverlay.classList.remove('visible');
                 trackInfoOverlay.style.opacity = '';
             });
 
             cube.addEventListener('click', () => {
-                // Toggle shadow on mobile
+                // Mobile: shadow follows the selected cube only (cleared on deselect/close)
                 if (window.innerWidth <= 768) {
-                    cube.classList.toggle('shadow-active');
+                    cubeWrappers.forEach(c => c.classList.toggle('shadow-active', c === cube));
                 }
 
                 // Desaturate color for greyed out look
