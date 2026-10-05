@@ -4264,11 +4264,22 @@
         setTimeout(() => { introOverlay.classList.add('hidden'); }, 3000);
 
         // ========== CONTENT HINT ==========
-        // After the intro reveals the home page, briefly flash the bars that have
-        // content (in their track colors) so users — especially on mobile, where
-        // there's no hover — know which segments are tappable.
+        // Flash the bars that have content (in their track colors) so users — especially
+        // on mobile, where there's no hover — know which segments are tappable.
+        // Runs after the intro, repeats while the home bar is idle, and replays
+        // whenever the user comes back to the home page from a gallery or view.
         const contentTracks = [0, 2, 4, 7, 9, 11]; // NUCLEAR, BRKFST, BASSVICTIM, LUCKI, MONTREALITY, SWAPA
-        setTimeout(() => {
+        const HINT_REPEAT_MS = 6000;
+        let hintTimer = null;
+
+        function homeIsIdle() {
+            return !mainContent.classList.contains('hidden') && !isTransitioning
+                && !isDarkMode && !isGridMode && !isSphereMode && !isGodraysMode
+                && (isMobile || hoveredIndex === -1); // desktop: don't flash under the cursor
+        }
+
+        function runHint() {
+            if (!homeIsIdle() || document.querySelector('.hint-flash')) return;
             contentTracks.forEach((trackIndex, n) => {
                 const seg = segments[trackIndex];
                 if (!seg) return;
@@ -4281,7 +4292,23 @@
                     flash.addEventListener('animationend', () => flash.remove(), { once: true });
                 }, n * 160); // stagger left-to-right
             });
-        }, 3300);
+        }
+
+        // (Re)start the cycle: flash after `delay`, then every HINT_REPEAT_MS
+        function scheduleHint(delay) {
+            clearTimeout(hintTimer);
+            hintTimer = setTimeout(function tick() {
+                runHint();
+                hintTimer = setTimeout(tick, HINT_REPEAT_MS);
+            }, delay);
+        }
+
+        scheduleHint(3300); // just after the intro reveals the page
+
+        // Back on the home page (main content un-hidden) → flash again right away
+        new MutationObserver(() => {
+            if (!mainContent.classList.contains('hidden')) scheduleHint(700);
+        }).observe(mainContent, { attributes: true, attributeFilter: ['class'] });
 
         // ========== KEYBOARD EVENTS ==========
         document.addEventListener('keydown', (e) => {

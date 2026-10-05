@@ -47,5 +47,55 @@
 </head>
 <body>
     <div id="root"></div>
+    <script>
+        // "Lamp coming on" intro: keep the light source + god rays dark until the
+        // scene is ready, then flicker on and settle — like an old bulb warming up.
+        (function () {
+            // [time (s), level] keyframes; level multiplies the scene's own light settings
+            const keys = [
+                [0.00, 0], [0.45, 0],
+                [0.50, 0.9], [0.56, 0.05],
+                [0.70, 0.6], [0.74, 0.1],
+                [0.95, 0.15], [1.00, 1.0], [1.08, 0.3],
+                [1.25, 0.35], [1.75, 1.15], [2.20, 1.0]
+            ];
+            const END = keys[keys.length - 1][0];
+            const levelAt = (t) => {
+                if (t >= END) return 1;
+                for (let i = 1; i < keys.length; i++) {
+                    const [t1, v1] = keys[i];
+                    const [t0, v0] = keys[i - 1];
+                    if (t <= t1) {
+                        const k = (t - t0) / (t1 - t0);
+                        return v0 + (v1 - v0) * (k * k * (3 - 2 * k)); // smoothstep
+                    }
+                }
+                return 1;
+            };
+
+            const HOLD_MS = 400; // stay dark briefly once the model is ready, then the bulb "strikes"
+            let emissiveBase = null, seenAt = null, start = null;
+            function frame(now) {
+                const fx = window.__godRays;
+                const src = fx && fx.lightSource;
+                if (!fx || !src || !src.material) { requestAnimationFrame(frame); return; }
+                if (emissiveBase === null) emissiveBase = src.material.emissiveIntensity;
+                const apply = (level) => {
+                    const mat = fx.godRaysMaterial; // re-read: the effect can be rebuilt on re-render
+                    mat.exposure = fx.__base.exposure * level;
+                    mat.weight = fx.__base.weight * Math.min(level, 1);
+                    src.material.emissiveIntensity = emissiveBase * level;
+                    src.visible = level > 0.02;
+                };
+                if (seenAt === null) seenAt = now;
+                if (now - seenAt < HOLD_MS) { apply(0); requestAnimationFrame(frame); return; }
+                if (start === null) start = now;
+                const t = (now - start) / 1000;
+                if (t < END) { apply(levelAt(t)); requestAnimationFrame(frame); }
+                else { apply(1); window.__lampDone = true; }
+            }
+            requestAnimationFrame(frame);
+        })();
+    </script>
 </body>
 </html>
