@@ -2764,32 +2764,37 @@
 
         const isMobile = window.matchMedia('(max-width: 768px)').matches;
 
-        // Mobile resting bar height: 44px, shrunk on short screens so the stack of
-        // 12 stays clear of the top-right menu icon (keeps ~60px above and below).
-        function computeMobileBaseH() {
-            return Math.max(28, Math.min(44, Math.floor((window.innerHeight - 120) / 12)));
-        }
-        let mobileBaseH = computeMobileBaseH();
+        // Mobile layout: keep bars at 44px and shift the whole stack down so it sits
+        // below the top-right menu icon. Bars only shrink when even the shifted
+        // stack would run past the bottom of the screen (very short viewports).
+        const MOBILE_BAR_H = 44, MOBILE_MIN_H = 28;
+        const ICON_GAP = 16;     // space between menu icon and top of the bar
+        const BOTTOM_GAP = 48;   // keep clear of the track label at the bottom
+        const barContainer = document.querySelector('.main-content .container');
+        let mobileBaseH = MOBILE_BAR_H;
+        let barShift = 0;
 
-        // Safety net: if the laid-out bar still reaches up under the menu icon
-        // (browser toolbars can make the real viewport shorter than innerHeight),
-        // shrink the bars until there's a 16px gap. The bar is vertically centred,
-        // so removing 2px of total height moves its top down by 1px.
-        function fitMobileBarUnderIcon() {
+        function fitMobileBar() {
             if (!isMobile || hoveredIndex !== -1) return;
-            const barTop = gradientBar.getBoundingClientRect().top;
-            const need = menuIcon.getBoundingClientRect().bottom + 16 - barTop;
-            if (need > 0 && mobileBaseH > 28) {
-                mobileBaseH = Math.max(28, mobileBaseH - Math.ceil((need * 2) / totalSegments));
-                segments.forEach((seg, i) => { currentHeights[i] = mobileBaseH; seg.style.height = mobileBaseH + 'px'; });
+            const iconBottom = menuIcon.getBoundingClientRect().bottom;
+            const minTop = iconBottom + ICON_GAP;
+            const maxBottom = window.innerHeight - BOTTOM_GAP;
+            // Shrink only if 12 bars can't fit between the icon and the bottom gap
+            const h = Math.max(MOBILE_MIN_H, Math.min(MOBILE_BAR_H, Math.floor((maxBottom - minTop) / totalSegments)));
+            if (h !== mobileBaseH) {
+                mobileBaseH = h;
+                segments.forEach((seg, i) => { currentHeights[i] = targetHeights[i] = h; seg.style.height = h + 'px'; });
             }
+            // Measure where the (centred) stack sits without our shift, then push it
+            // down just enough to clear the icon, never past the bottom gap
+            const r = gradientBar.getBoundingClientRect();
+            const naturalTop = r.top - barShift, naturalBottom = r.bottom - barShift;
+            barShift = Math.max(0, Math.min(minTop - naturalTop, maxBottom - naturalBottom));
+            barContainer.style.transform = barShift ? `translateY(${barShift}px)` : '';
         }
         if (isMobile) {
-            window.addEventListener('resize', () => {
-                mobileBaseH = computeMobileBaseH();
-                requestAnimationFrame(fitMobileBarUnderIcon);
-            });
-            window.addEventListener('load', () => requestAnimationFrame(fitMobileBarUnderIcon));
+            window.addEventListener('resize', () => requestAnimationFrame(fitMobileBar));
+            window.addEventListener('load', () => requestAnimationFrame(fitMobileBar));
         }
 
         function initSegments() {

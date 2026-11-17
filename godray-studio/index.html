@@ -47,6 +47,8 @@
 </head>
 <body>
     <div id="root"></div>
+    <!-- Black cover so the unlit model is never seen; the light-up fades it out -->
+    <div id="lampCover" style="position:fixed;inset:0;background:#050505;z-index:9999;pointer-events:none;"></div>
     <script>
         // "Lamp coming on" intro: keep the light source + god rays dark until the
         // scene is ready, then flicker on and settle — like an old bulb warming up.
@@ -81,6 +83,8 @@
                 if (!fx || !src || !src.material) { requestAnimationFrame(frame); return; }
                 if (emissiveBase === null) emissiveBase = src.material.emissiveIntensity;
                 const apply = (level) => {
+                    // The scene only shows as much as the "bulb" lights it
+                    cover.style.opacity = String(Math.max(0, 1 - Math.min(level, 1)));
                     const mat = fx.godRaysMaterial; // re-read: the effect can be rebuilt on re-render
                     mat.exposure = fx.__base.exposure * level;
                     mat.weight = fx.__base.weight * Math.min(level, 1);
@@ -92,8 +96,11 @@
                 if (start === null) start = now;
                 const t = (now - start) / 1000;
                 if (t < END) { apply(levelAt(t)); requestAnimationFrame(frame); }
-                else { apply(1); window.__lampDone = true; }
+                else { apply(1); window.__lampDone = true; cover.remove(); }
             }
+            const cover = document.getElementById('lampCover');
+            // Fallback: never leave the page black if the scene fails to load
+            setTimeout(() => { if (!window.__godRays && cover.isConnected) cover.remove(); }, 12000);
             requestAnimationFrame(frame);
         })();
     </script>
