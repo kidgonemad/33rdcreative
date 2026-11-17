@@ -2764,14 +2764,42 @@
 
         const isMobile = window.matchMedia('(max-width: 768px)').matches;
 
+        // Mobile resting bar height: 44px, shrunk on short screens so the stack of
+        // 12 stays clear of the top-right menu icon (keeps ~60px above and below).
+        function computeMobileBaseH() {
+            return Math.max(28, Math.min(44, Math.floor((window.innerHeight - 120) / 12)));
+        }
+        let mobileBaseH = computeMobileBaseH();
+
+        // Safety net: if the laid-out bar still reaches up under the menu icon
+        // (browser toolbars can make the real viewport shorter than innerHeight),
+        // shrink the bars until there's a 16px gap. The bar is vertically centred,
+        // so removing 2px of total height moves its top down by 1px.
+        function fitMobileBarUnderIcon() {
+            if (!isMobile || hoveredIndex !== -1) return;
+            const barTop = gradientBar.getBoundingClientRect().top;
+            const need = menuIcon.getBoundingClientRect().bottom + 16 - barTop;
+            if (need > 0 && mobileBaseH > 28) {
+                mobileBaseH = Math.max(28, mobileBaseH - Math.ceil((need * 2) / totalSegments));
+                segments.forEach((seg, i) => { currentHeights[i] = mobileBaseH; seg.style.height = mobileBaseH + 'px'; });
+            }
+        }
+        if (isMobile) {
+            window.addEventListener('resize', () => {
+                mobileBaseH = computeMobileBaseH();
+                requestAnimationFrame(fitMobileBarUnderIcon);
+            });
+            window.addEventListener('load', () => requestAnimationFrame(fitMobileBarUnderIcon));
+        }
+
         function initSegments() {
             segments.forEach((seg, i) => {
                 seg.style.background = grayColors[i];
                 if (isMobile) {
                     seg.style.width = '100%';
-                    seg.style.height = '44px';
-                    currentHeights[i] = 44;
-                    targetHeights[i] = 44;
+                    seg.style.height = mobileBaseH + 'px';
+                    currentHeights[i] = mobileBaseH;
+                    targetHeights[i] = mobileBaseH;
                 } else {
                     seg.style.height = params.baseHeight + 'px';
                     seg.style.width = params.barWidth + 'px';
@@ -2806,12 +2834,12 @@
                     // Mobile: square expansion matching desktop
                     for (let i = 0; i < totalSegments; i++) {
                         if (hoveredIndex === -1) {
-                            targetHeights[i] = 44;
+                            targetHeights[i] = mobileBaseH;
                         } else if (i === hoveredIndex) {
                             targetHeights[i] = params.expandSize;
                         } else {
                             const d = Math.abs(i - hoveredIndex);
-                            targetHeights[i] = Math.max(44, 70 - (d * 10));
+                            targetHeights[i] = Math.max(mobileBaseH, 70 - (d * 10));
                         }
                     }
 
