@@ -4,7 +4,7 @@
 <head>
     <base href="/godray-studio/">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>GLB Layer & GodRay Studio</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -18,6 +18,18 @@
         }
         canvas {
             display: block;
+        }
+        /* Phones/tablets: the 3D view is a fixed scene — no panning, bounce or pinch-zoom */
+        @media (pointer: coarse) {
+            html, body {
+                height: 100%;
+                overflow: hidden;
+                overscroll-behavior: none;
+                touch-action: none;
+            }
+            canvas {
+                touch-action: none;
+            }
         }
         /* Hide scrollbars for the sidebar */
         .no-scrollbar::-webkit-scrollbar {
@@ -99,6 +111,12 @@
                 else { apply(1); window.__lampDone = true; cover.remove(); }
             }
             const cover = document.getElementById('lampCover');
+            // Touch screens: swallow drags and pinches so nothing on the page can be moved
+            if (window.matchMedia('(pointer: coarse)').matches) {
+                const block = (e) => e.preventDefault();
+                document.addEventListener('touchmove', block, { passive: false });
+                document.addEventListener('gesturestart', block, { passive: false }); // iOS pinch
+            }
             // Fallback: never leave the page black if the scene fails to load
             setTimeout(() => { if (!window.__godRays && cover.isConnected) cover.remove(); }, 12000);
             requestAnimationFrame(frame);
