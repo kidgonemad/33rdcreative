@@ -96,22 +96,6 @@
             border-radius: 0 3px 3px 0;
         }
 
-        /* Checkered tracks: pattern layer that fades in wherever the bar shows its colour */
-        .checker-layer,
-        .hint-flash.checker-pattern {
-            background-color: #e8352a;
-            background-image: conic-gradient(#f5b82e 25%, transparent 0 50%, #f5b82e 0 75%, transparent 0);
-            background-size: 14px 14px;
-        }
-
-        .checker-layer {
-            position: absolute;
-            inset: 0;
-            opacity: 0;
-            pointer-events: none;
-            border-radius: inherit;
-        }
-
         /* Titles on bars that have a gallery (shown once the intro finishes) */
         .bar-label {
             position: absolute;
@@ -2411,7 +2395,7 @@
 
         .marathon-item:hover {
             transform: scale(1.02);
-            box-shadow: 0 15px 50px rgba(245, 184, 46, 0.2);
+            box-shadow: 0 15px 50px rgba(235, 51, 33, 0.2);
             z-index: 10;
         }
 
@@ -2468,7 +2452,7 @@
             }
 
             50% {
-                background-color: rgba(245, 184, 46, 0.65);
+                background-color: rgba(235, 51, 33, 0.65);
             }
         }
 
@@ -2502,7 +2486,7 @@
             width: 500px;
             height: 500px;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(245, 184, 46, 0.08) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(235, 51, 33, 0.08) 0%, transparent 70%);
             pointer-events: none;
             left: 50%;
             top: 50%;
@@ -2661,7 +2645,7 @@
                 <div class="bar-segment" data-index="4" data-track="4" data-color="#1e5be9">
                     <div class="texture"></div>
                 </div>
-                <div class="bar-segment" data-index="5" data-track="5" data-color="#f5b82e">
+                <div class="bar-segment" data-index="5" data-track="5" data-color="#ff9f43">
                     <div class="texture"></div>
                 </div>
                 <div class="bar-segment" data-index="6" data-track="6" data-color="#1dd1a1">
@@ -2676,7 +2660,7 @@
                 <div class="bar-segment" data-index="9" data-track="9" data-color="#ff69b4">
                     <div class="texture"></div>
                 </div>
-                <div class="bar-segment" data-index="10" data-track="10" data-color="#7bed9f">
+                <div class="bar-segment" data-index="10" data-track="10" data-color="#eb3321">
                     <div class="texture"></div>
                 </div>
                 <div class="bar-segment" data-index="11" data-track="11" data-color="#e91e1e">
@@ -2726,12 +2710,12 @@
             <div class="bar-segment-mini" data-index="2" data-track="2" data-color="#8b5a2b"></div>
             <div class="bar-segment-mini" data-index="3" data-track="3" data-color="#764ba2"></div>
             <div class="bar-segment-mini" data-index="4" data-track="4" data-color="#1e5be9"></div>
-            <div class="bar-segment-mini" data-index="5" data-track="5" data-color="#f5b82e"></div>
+            <div class="bar-segment-mini" data-index="5" data-track="5" data-color="#ff9f43"></div>
             <div class="bar-segment-mini" data-index="6" data-track="6" data-color="#1dd1a1"></div>
             <div class="bar-segment-mini" data-index="7" data-track="7" data-color="#5f27cd"></div>
             <div class="bar-segment-mini" data-index="8" data-track="8" data-color="#00d2d3"></div>
             <div class="bar-segment-mini" data-index="9" data-track="9" data-color="#ff69b4"></div>
-            <div class="bar-segment-mini" data-index="10" data-track="10" data-color="#7bed9f"></div>
+            <div class="bar-segment-mini" data-index="10" data-track="10" data-color="#eb3321"></div>
             <div class="bar-segment-mini" data-index="11" data-track="11" data-color="#e91e1e"></div>
         </div>
     </div>
@@ -2890,18 +2874,6 @@
         const segments = document.querySelectorAll('#gradientBar .bar-segment');
         const segmentsMini = document.querySelectorAll('#gradientBarMini .bar-segment-mini');
 
-        // Tracks drawn as a checkerboard instead of a flat colour
-        const checkeredTracks = new Set([5]); // MARATHON
-        [...segments, ...segmentsMini].forEach(seg => {
-            if (!checkeredTracks.has(parseInt(seg.dataset.index))) return;
-            const layer = document.createElement('div');
-            layer.className = 'checker-layer';
-            seg.insertBefore(layer, seg.firstChild); // under the texture
-            seg._checker = layer;
-        });
-        function setChecker(seg, amount) {
-            if (seg._checker) seg._checker.style.opacity = amount;
-        }
         const gradientBar = document.getElementById('gradientBar');
         const gradientBarMini = document.getElementById('gradientBarMini');
         const mainContent = document.getElementById('mainContent');
@@ -2926,15 +2898,15 @@
         const globalMiniBar = document.getElementById('globalMiniBar');
 
         const totalSegments = 12;
-        const trackNames = ['NUCLEAR', 'WAVES', 'BRKFST', '33', 'BASSVICTIM', 'MARATHON', 'PULSE', 'LUCKI', 'FLUX', 'MONTREALITY', 'BLOOM', 'SWAPA'];
+        const trackNames = ['NUCLEAR', 'WAVES', 'BRKFST', '33', 'BASSVICTIM', 'ECHOES', 'PULSE', 'LUCKI', 'FLUX', 'MONTREALITY', 'MARATHON', 'SWAPA'];
         const artistNames = ['SANNHET', 'FLYING LOTUS', 'TYCHO', 'BONOBO', 'MASSIVE ATTACK', 'BOARDS OF CANADA', 'APHEX TWIN', 'BURIAL', 'FOUR TET', 'CARIBOU', 'MODERAT', 'AMON TOBIN'];
 
         const grayColors = ['#c8c8c8', '#bcbcbc', '#afafaf', '#a2a2a2', '#959595', '#888888', '#7a7a7a', '#6d6d6d', '#5f5f5f', '#525252', '#3d3d3d', '#282828'];
 
         // Distinct colors across the spectrum for hover effect - each column has unique color
-        const hoverColors = ['#e9c31e', '#4ecdc4', '#8b5a2b', '#764ba2', '#1e5be9', '#f5b82e', '#1dd1a1', '#5f27cd', '#00d2d3', '#ff69b4', '#7bed9f', '#e91e1e'];
+        const hoverColors = ['#e9c31e', '#4ecdc4', '#8b5a2b', '#764ba2', '#1e5be9', '#ff9f43', '#1dd1a1', '#5f27cd', '#00d2d3', '#ff69b4', '#eb3321', '#e91e1e'];
 
-        const trackColors = ['#e9c31e', '#4ecdc4', '#8b5a2b', '#764ba2', '#1e5be9', '#f5b82e', '#1dd1a1', '#5f27cd', '#00d2d3', '#ff69b4', '#7bed9f', '#e91e1e'];
+        const trackColors = ['#e9c31e', '#4ecdc4', '#8b5a2b', '#764ba2', '#1e5be9', '#ff9f43', '#1dd1a1', '#5f27cd', '#00d2d3', '#ff69b4', '#eb3321', '#e91e1e'];
 
         // Create 3D cubes
         const cubeData = [];
@@ -3098,10 +3070,8 @@
                             const d = Math.abs(i - hoveredIndex);
                             const blend = Math.max(0, 1 - (d * params.colorBlend));
                             seg.style.background = blendColors(grayColors[i], hoverColors[i], blend);
-                            setChecker(seg, blend);
                         } else {
                             seg.style.background = grayColors[i];
-                            setChecker(seg, 0);
                         }
                     });
                 } else {
@@ -3131,10 +3101,8 @@
                             const d = Math.abs(i - hoveredIndex);
                             const blend = Math.max(0, 1 - (d * params.colorBlend));
                             seg.style.background = blendColors(grayColors[i], hoverColors[i], blend);
-                            setChecker(seg, blend);
                         } else {
                             seg.style.background = grayColors[i];
-                            setChecker(seg, 0);
                         }
                     });
                 }
@@ -3165,10 +3133,8 @@
                     const d = Math.abs(i - hoveredIndexMini);
                     const blend = Math.max(0, 1 - (d * params.colorBlend));
                     seg.style.background = blendColors(grayColors[i], hoverColors[i], blend);
-                    setChecker(seg, blend);
                 } else {
                     seg.style.background = grayColors[i];
-                    setChecker(seg, 0);
                 }
             });
 
@@ -3327,7 +3293,7 @@
                     enterMontrealityMode();
                 } else if (activeTrack === 11) {
                     enterSwapaMode();
-                } else if (activeTrack === 5) {
+                } else if (activeTrack === 10) {
                     enterMarathonMode();
                 } else {
                     // Disabled tracks - desaturation animation
@@ -4260,7 +4226,7 @@
                 initGalleryGrid(marathonImages, marathonGrid, marathonCounter, 'marathon', 'marathon-item');
             }
             currentTrackLabel.textContent = 'MARATHON';
-            currentTrackLabel.style.color = segments[5].dataset.color;
+            currentTrackLabel.style.color = segments[10].dataset.color;
             isTransitioning = true;
             gradientBar.classList.add('squishing');
             setTimeout(() => {
@@ -4609,7 +4575,7 @@
         // on mobile, where there's no hover — know which segments are tappable.
         // Runs after the intro, repeats while the home bar is idle, and replays
         // whenever the user comes back to the home page from a gallery or view.
-        const contentTracks = [0, 2, 4, 5, 7, 9, 11]; // NUCLEAR, BRKFST, BASSVICTIM, MARATHON, LUCKI, MONTREALITY, SWAPA
+        const contentTracks = [0, 2, 4, 7, 9, 10, 11]; // NUCLEAR, BRKFST, BASSVICTIM, LUCKI, MONTREALITY, MARATHON, SWAPA
         const HINT_REPEAT_MS = 6000;
         let hintTimer = null;
 
@@ -4626,8 +4592,7 @@
                 if (!seg) return;
                 const flash = document.createElement('div');
                 flash.className = 'hint-flash';
-                if (checkeredTracks.has(trackIndex)) flash.classList.add('checker-pattern');
-                else flash.style.background = trackColors[trackIndex];
+                flash.style.background = trackColors[trackIndex];
                 seg.appendChild(flash);
                 setTimeout(() => {
                     flash.classList.add('run');
@@ -4657,7 +4622,6 @@
             label.textContent = trackNames[trackIndex];
             const lum = parseInt(grayColors[trackIndex].slice(1, 3), 16);
             label.style.color = lum > 0x90 ? 'rgba(0, 0, 0, 0.6)' : 'rgba(255, 255, 255, 0.85)';
-            if (checkeredTracks.has(trackIndex)) label.style.textShadow = '0 0 3px rgba(0, 0, 0, 0.9), 0 0 8px rgba(0, 0, 0, 0.6)';
             seg.appendChild(label);
         });
         setTimeout(() => gradientBar.classList.add('bar-labels-on'), 3300); // after the intro
