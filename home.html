@@ -96,7 +96,7 @@
             border-radius: 0 3px 3px 0;
         }
 
-        /* Titles on bars that have a gallery (shown once the intro finishes) */
+        /* Titles on bars that have a gallery (shown once after the intro, then faded out) */
         .bar-label {
             position: absolute;
             z-index: 2;
@@ -4624,7 +4624,9 @@
             label.style.color = lum > 0x90 ? 'rgba(0, 0, 0, 0.6)' : 'rgba(255, 255, 255, 0.85)';
             seg.appendChild(label);
         });
-        setTimeout(() => gradientBar.classList.add('bar-labels-on'), 3300); // after the intro
+        // Show the titles once, alongside the first colour flash, then fade them out for good
+        setTimeout(() => gradientBar.classList.add('bar-labels-on'), 3300);  // after the intro
+        setTimeout(() => gradientBar.classList.remove('bar-labels-on'), 6800);
 
         scheduleHint(3300); // just after the intro reveals the page
 
