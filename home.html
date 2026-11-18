@@ -96,6 +96,42 @@
             border-radius: 0 3px 3px 0;
         }
 
+        /* Checkered tracks: pattern layer that fades in wherever the bar shows its colour */
+        .checker-layer,
+        .hint-flash.checker-pattern {
+            background-color: #e8352a;
+            background-image: conic-gradient(#f5b82e 25%, transparent 0 50%, #f5b82e 0 75%, transparent 0);
+            background-size: 14px 14px;
+        }
+
+        .checker-layer {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            pointer-events: none;
+            border-radius: inherit;
+        }
+
+        /* Titles on bars that have a gallery (shown once the intro finishes) */
+        .bar-label {
+            position: absolute;
+            z-index: 2;
+            pointer-events: none;
+            font-size: 9px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            white-space: nowrap;
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            opacity: 0;
+            transition: opacity 0.8s ease;
+        }
+
+        .bar-labels-on .bar-label {
+            opacity: 0.85;
+        }
+
         .bar-segment .track-title {
             position: absolute;
             font-size: 22px;
@@ -606,6 +642,13 @@
                 border-radius: 0 0 4px 4px !important;
             }
 
+            .bar-label {
+                writing-mode: horizontal-tb;
+                transform: none;
+                left: 16px;
+                font-size: 10px;
+            }
+
             .bar-segment .track-title {
                 font-size: 14px !important;
                 letter-spacing: 3px !important;
@@ -749,6 +792,7 @@
             .brkfst-gallery,
             .montreality-gallery,
             .swapa-gallery,
+            .marathon-gallery,
             .lucki-gallery {
                 position: fixed !important;
                 top: 0 !important;
@@ -768,6 +812,7 @@
             .brkfst-grid-container,
             .montreality-grid-container,
             .swapa-grid-container,
+            .marathon-grid-container,
             .lucki-grid-container {
                 padding: 60px 16px 40px !important;
                 max-width: 100% !important;
@@ -779,6 +824,7 @@
             .brkfst-grid,
             .montreality-grid,
             .swapa-grid,
+            .marathon-grid,
             .lucki-grid {
                 grid-template-columns: repeat(2, 1fr) !important;
                 gap: 10px !important;
@@ -790,6 +836,7 @@
             .brkfst-item,
             .montreality-item,
             .swapa-item,
+            .marathon-item,
             .lucki-item {
                 border-radius: 4px !important;
             }
@@ -800,6 +847,7 @@
             .brkfst-glow,
             .montreality-glow,
             .swapa-glow,
+            .marathon-glow,
             .lucki-glow {
                 width: 300px !important;
                 height: 300px !important;
@@ -2301,6 +2349,167 @@
             z-index: 0;
         }
 
+        /* Marathon Gallery View */
+        .marathon-gallery {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a0a0a;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 250;
+            transition: opacity 0.5s;
+            overflow-y: scroll;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+        }
+
+        .marathon-gallery.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .marathon-grid-container {
+            padding: 80px 40px 60px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .marathon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .marathon-item {
+            position: relative;
+            aspect-ratio: 16/9;
+            overflow: hidden;
+            border-radius: 6px;
+            background: #151515;
+            cursor: pointer;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s;
+        }
+
+        .marathon-item video,
+        .marathon-item img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s, opacity 0.4s;
+        }
+
+        .marathon-item.loading video,
+        .marathon-item.loading img {
+            opacity: 0;
+        }
+
+        .marathon-item:hover {
+            transform: scale(1.02);
+            box-shadow: 0 15px 50px rgba(245, 184, 46, 0.2);
+            z-index: 10;
+        }
+
+        .marathon-item:hover video,
+        .marathon-item:hover img {
+            transform: scale(1.08);
+        }
+
+        .marathon-item::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.6) 0%, transparent 40%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .marathon-item:hover::after {
+            opacity: 1;
+        }
+
+        .marathon-item .item-title {
+            display: none !important;
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            right: 12px;
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.85);
+            text-transform: uppercase;
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity 0.3s, transform 0.3s;
+            z-index: 2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .marathon-item:hover .item-title {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .marathon-item.loading {
+            animation: marathonShimmer 1.1s ease-in-out infinite;
+        }
+
+        @keyframes marathonShimmer {
+            0%, 100% {
+                background-color: #151515;
+            }
+
+            50% {
+                background-color: rgba(245, 184, 46, 0.65);
+            }
+        }
+
+        .marathon-counter {
+            display: none !important;
+            position: fixed;
+            bottom: 25px;
+            right: 40px;
+            font-size: 11px;
+            letter-spacing: 3px;
+            color: rgba(255, 255, 255, 0.25);
+            z-index: 160;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .marathon-gallery.visible .marathon-counter {
+            opacity: 1;
+        }
+
+        .marathon-gallery.visible~.current-track {
+            opacity: 1;
+        }
+
+        .marathon-gallery.visible~.esc-hint {
+            opacity: 0.5;
+        }
+
+        .marathon-glow {
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(245, 184, 46, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 0;
+        }
+
         /* Godrays Viewer */
         .godrays-view {
             position: fixed;
@@ -2452,7 +2661,7 @@
                 <div class="bar-segment" data-index="4" data-track="4" data-color="#1e5be9">
                     <div class="texture"></div>
                 </div>
-                <div class="bar-segment" data-index="5" data-track="5" data-color="#ff9f43">
+                <div class="bar-segment" data-index="5" data-track="5" data-color="#f5b82e">
                     <div class="texture"></div>
                 </div>
                 <div class="bar-segment" data-index="6" data-track="6" data-color="#1dd1a1">
@@ -2517,7 +2726,7 @@
             <div class="bar-segment-mini" data-index="2" data-track="2" data-color="#8b5a2b"></div>
             <div class="bar-segment-mini" data-index="3" data-track="3" data-color="#764ba2"></div>
             <div class="bar-segment-mini" data-index="4" data-track="4" data-color="#1e5be9"></div>
-            <div class="bar-segment-mini" data-index="5" data-track="5" data-color="#ff9f43"></div>
+            <div class="bar-segment-mini" data-index="5" data-track="5" data-color="#f5b82e"></div>
             <div class="bar-segment-mini" data-index="6" data-track="6" data-color="#1dd1a1"></div>
             <div class="bar-segment-mini" data-index="7" data-track="7" data-color="#5f27cd"></div>
             <div class="bar-segment-mini" data-index="8" data-track="8" data-color="#00d2d3"></div>
@@ -2580,6 +2789,17 @@
             </div>
         </div>
         <div class="swapa-counter" id="swapaCounter"></div>
+    </div>
+
+    <!-- Marathon Gallery -->
+    <div class="marathon-gallery" id="marathonGallery">
+        <div class="marathon-glow"></div>
+        <div class="marathon-grid-container">
+            <div class="marathon-grid" id="marathonGrid">
+                <!-- Images loaded by JS -->
+            </div>
+        </div>
+        <div class="marathon-counter" id="marathonCounter"></div>
     </div>
 
     <!-- Lucki Gallery -->
@@ -2669,6 +2889,19 @@
     <script>
         const segments = document.querySelectorAll('#gradientBar .bar-segment');
         const segmentsMini = document.querySelectorAll('#gradientBarMini .bar-segment-mini');
+
+        // Tracks drawn as a checkerboard instead of a flat colour
+        const checkeredTracks = new Set([5]); // MARATHON
+        [...segments, ...segmentsMini].forEach(seg => {
+            if (!checkeredTracks.has(parseInt(seg.dataset.index))) return;
+            const layer = document.createElement('div');
+            layer.className = 'checker-layer';
+            seg.insertBefore(layer, seg.firstChild); // under the texture
+            seg._checker = layer;
+        });
+        function setChecker(seg, amount) {
+            if (seg._checker) seg._checker.style.opacity = amount;
+        }
         const gradientBar = document.getElementById('gradientBar');
         const gradientBarMini = document.getElementById('gradientBarMini');
         const mainContent = document.getElementById('mainContent');
@@ -2693,15 +2926,15 @@
         const globalMiniBar = document.getElementById('globalMiniBar');
 
         const totalSegments = 12;
-        const trackNames = ['NUCLEAR', 'WAVES', 'BRKFST', '33', 'BASSVICTIM', 'ECHOES', 'PULSE', 'LUCKI', 'FLUX', 'MONTREALITY', 'BLOOM', 'SWAPA'];
+        const trackNames = ['NUCLEAR', 'WAVES', 'BRKFST', '33', 'BASSVICTIM', 'MARATHON', 'PULSE', 'LUCKI', 'FLUX', 'MONTREALITY', 'BLOOM', 'SWAPA'];
         const artistNames = ['SANNHET', 'FLYING LOTUS', 'TYCHO', 'BONOBO', 'MASSIVE ATTACK', 'BOARDS OF CANADA', 'APHEX TWIN', 'BURIAL', 'FOUR TET', 'CARIBOU', 'MODERAT', 'AMON TOBIN'];
 
         const grayColors = ['#c8c8c8', '#bcbcbc', '#afafaf', '#a2a2a2', '#959595', '#888888', '#7a7a7a', '#6d6d6d', '#5f5f5f', '#525252', '#3d3d3d', '#282828'];
 
         // Distinct colors across the spectrum for hover effect - each column has unique color
-        const hoverColors = ['#e9c31e', '#4ecdc4', '#8b5a2b', '#764ba2', '#1e5be9', '#ff9f43', '#1dd1a1', '#5f27cd', '#00d2d3', '#ff69b4', '#7bed9f', '#e91e1e'];
+        const hoverColors = ['#e9c31e', '#4ecdc4', '#8b5a2b', '#764ba2', '#1e5be9', '#f5b82e', '#1dd1a1', '#5f27cd', '#00d2d3', '#ff69b4', '#7bed9f', '#e91e1e'];
 
-        const trackColors = ['#e9c31e', '#4ecdc4', '#8b5a2b', '#764ba2', '#1e5be9', '#ff9f43', '#1dd1a1', '#5f27cd', '#00d2d3', '#ff69b4', '#7bed9f', '#e91e1e'];
+        const trackColors = ['#e9c31e', '#4ecdc4', '#8b5a2b', '#764ba2', '#1e5be9', '#f5b82e', '#1dd1a1', '#5f27cd', '#00d2d3', '#ff69b4', '#7bed9f', '#e91e1e'];
 
         // Create 3D cubes
         const cubeData = [];
@@ -2750,6 +2983,7 @@
         let isBrkfstMode = false;
         let isMontrealityMode = false;
         let isSwapaMode = false;
+        let isMarathonMode = false;
         let isLuckiMode = false;
         let isGodraysMode = false;
         let isTransitioning = false;
@@ -2864,8 +3098,10 @@
                             const d = Math.abs(i - hoveredIndex);
                             const blend = Math.max(0, 1 - (d * params.colorBlend));
                             seg.style.background = blendColors(grayColors[i], hoverColors[i], blend);
+                            setChecker(seg, blend);
                         } else {
                             seg.style.background = grayColors[i];
+                            setChecker(seg, 0);
                         }
                     });
                 } else {
@@ -2895,8 +3131,10 @@
                             const d = Math.abs(i - hoveredIndex);
                             const blend = Math.max(0, 1 - (d * params.colorBlend));
                             seg.style.background = blendColors(grayColors[i], hoverColors[i], blend);
+                            setChecker(seg, blend);
                         } else {
                             seg.style.background = grayColors[i];
+                            setChecker(seg, 0);
                         }
                     });
                 }
@@ -2927,8 +3165,10 @@
                     const d = Math.abs(i - hoveredIndexMini);
                     const blend = Math.max(0, 1 - (d * params.colorBlend));
                     seg.style.background = blendColors(grayColors[i], hoverColors[i], blend);
+                    setChecker(seg, blend);
                 } else {
                     seg.style.background = grayColors[i];
+                    setChecker(seg, 0);
                 }
             });
 
@@ -2996,7 +3236,7 @@
             // Map gyro tilt to bar selection + visual tilt
             function updateGyroSelection() {
                 if (!gyroActive || gyroPaused || isDarkMode || isGridMode || isTransitioning
-                    || isNuclearMode || isBassvictimMode || isBrkfstMode || isMontrealityMode || isSwapaMode || isLuckiMode || isGodraysMode) {
+                    || isNuclearMode || isBassvictimMode || isBrkfstMode || isMontrealityMode || isSwapaMode || isMarathonMode || isLuckiMode || isGodraysMode) {
                     requestAnimationFrame(updateGyroSelection);
                     return;
                 }
@@ -3087,6 +3327,8 @@
                     enterMontrealityMode();
                 } else if (activeTrack === 11) {
                     enterSwapaMode();
+                } else if (activeTrack === 5) {
+                    enterMarathonMode();
                 } else {
                     // Disabled tracks - desaturation animation
                     const seg = segments[hoveredIndex];
@@ -3703,6 +3945,21 @@
 
         let swapaLoaded = false;
 
+        // ========== MARATHON GALLERY ==========
+        const marathonGallery = document.getElementById('marathonGallery');
+        const marathonGrid = document.getElementById('marathonGrid');
+        const marathonCounter = document.getElementById('marathonCounter');
+
+        const marathonImages = [
+            'marathon-01.gif',
+            'marathon-02.gif',
+            'marathon-03.gif',
+            'marathon-04.gif',
+            'marathon-05.gif'
+        ];
+
+        let marathonLoaded = false;
+
         function enterNuclearMode() {
             if (!nuclearLoaded) {
                 nuclearLoaded = true;
@@ -3991,6 +4248,54 @@
             setTimeout(() => { isTransitioning = false; }, 1100);
         }
 
+        function enterMarathonMode() {
+            if (!marathonLoaded) {
+                marathonLoaded = true;
+                initGalleryGrid(marathonImages, marathonGrid, marathonCounter, 'marathon', 'marathon-item');
+            }
+            currentTrackLabel.textContent = 'MARATHON';
+            currentTrackLabel.style.color = segments[5].dataset.color;
+            isTransitioning = true;
+            gradientBar.classList.add('squishing');
+            setTimeout(() => {
+                transitionBlack.style.transition = 'height 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+                transitionBlack.style.height = '100vh';
+            }, 400);
+            setTimeout(() => {
+                isMarathonMode = true;
+                mainContent.classList.add('hidden');
+                marathonGallery.classList.add('visible');
+                globalMiniBar.classList.add('visible');
+                editPanel.classList.add('dark-theme');
+                toggleBtn.classList.add('dark-theme');
+                menuIcon.style.opacity = '0';
+                gradientBar.classList.remove('squishing');
+                hoveredIndex = -1;
+                setTimeout(() => {
+                    transitionBlack.style.height = '0';
+                    isTransitioning = false;
+                }, 100);
+            }, 900);
+        }
+
+        function exitMarathonMode() {
+            isTransitioning = true;
+            transitionBlack.style.transition = 'height 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+            transitionBlack.style.height = '100vh';
+            setTimeout(() => {
+                isMarathonMode = false;
+                marathonGallery.classList.remove('visible');
+                globalMiniBar.classList.remove('visible');
+                mainContent.classList.remove('hidden');
+                editPanel.classList.remove('dark-theme');
+                toggleBtn.classList.remove('dark-theme');
+                menuIcon.style.opacity = '1';
+                activeTrack = null;
+            }, 500);
+            setTimeout(() => { transitionBlack.style.height = '0'; }, 600);
+            setTimeout(() => { isTransitioning = false; }, 1100);
+        }
+
         // Click on global mini bar to exit current mode
         globalMiniBar.addEventListener('click', () => {
             if (!isTransitioning) {
@@ -3999,6 +4304,7 @@
                 else if (isBrkfstMode) exitBrkfstMode();
                 else if (isMontrealityMode) exitMontrealityMode();
                 else if (isSwapaMode) exitSwapaMode();
+                else if (isMarathonMode) exitMarathonMode();
                 else if (isLuckiMode) exitLuckiMode();
                 else if (isGodraysMode) exitGodraysMode();
                 else if (isDarkMode) exitDarkMode();
@@ -4297,7 +4603,7 @@
         // on mobile, where there's no hover — know which segments are tappable.
         // Runs after the intro, repeats while the home bar is idle, and replays
         // whenever the user comes back to the home page from a gallery or view.
-        const contentTracks = [0, 2, 4, 7, 9, 11]; // NUCLEAR, BRKFST, BASSVICTIM, LUCKI, MONTREALITY, SWAPA
+        const contentTracks = [0, 2, 4, 5, 7, 9, 11]; // NUCLEAR, BRKFST, BASSVICTIM, MARATHON, LUCKI, MONTREALITY, SWAPA
         const HINT_REPEAT_MS = 6000;
         let hintTimer = null;
 
@@ -4314,7 +4620,8 @@
                 if (!seg) return;
                 const flash = document.createElement('div');
                 flash.className = 'hint-flash';
-                flash.style.background = trackColors[trackIndex];
+                if (checkeredTracks.has(trackIndex)) flash.classList.add('checker-pattern');
+                else flash.style.background = trackColors[trackIndex];
                 seg.appendChild(flash);
                 setTimeout(() => {
                     flash.classList.add('run');
@@ -4334,6 +4641,20 @@
                 hintTimer = setTimeout(tick, HINT_REPEAT_MS);
             }, delay);
         }
+
+        // Titles on the content bars; dark text on the light-grey bars, light on dark
+        contentTracks.forEach(trackIndex => {
+            const seg = segments[trackIndex];
+            if (!seg) return;
+            const label = document.createElement('span');
+            label.className = 'bar-label';
+            label.textContent = trackNames[trackIndex];
+            const lum = parseInt(grayColors[trackIndex].slice(1, 3), 16);
+            label.style.color = lum > 0x90 ? 'rgba(0, 0, 0, 0.6)' : 'rgba(255, 255, 255, 0.85)';
+            if (checkeredTracks.has(trackIndex)) label.style.textShadow = '0 0 3px rgba(0, 0, 0, 0.9), 0 0 8px rgba(0, 0, 0, 0.6)';
+            seg.appendChild(label);
+        });
+        setTimeout(() => gradientBar.classList.add('bar-labels-on'), 3300); // after the intro
 
         scheduleHint(3300); // just after the intro reveals the page
 
@@ -4357,6 +4678,8 @@
                     exitMontrealityMode();
                 } else if (isSwapaMode && !isTransitioning) {
                     exitSwapaMode();
+                } else if (isMarathonMode && !isTransitioning) {
+                    exitMarathonMode();
                 } else if (isLuckiMode && !isTransitioning) {
                     exitLuckiMode();
                 } else if (isGodraysMode && !isTransitioning && menuState !== 3) {
